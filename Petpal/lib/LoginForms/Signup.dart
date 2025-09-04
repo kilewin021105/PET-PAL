@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'login.dart'; // Import login screen
-import 'package:flutter_application_1/main.dart';
 import 'package:hive/hive.dart';
 class SignUpScreen extends StatelessWidget {
   final TextEditingController nameController = TextEditingController();
