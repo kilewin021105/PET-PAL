@@ -97,7 +97,7 @@ class PetsPage extends StatefulWidget {
 }
 
 class _PetsPageState extends State<PetsPage> {
-  List<Map<String, String>> _pets = [];
+  final List<Map<String, String>> _pets = [];
 
   void _addPet() {
     String name = '';
