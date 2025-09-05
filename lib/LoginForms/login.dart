@@ -1,79 +1,77 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/LoginForms/Signup.dart';
-import 'package:hive/hive.dart';
-import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/LoginForms/signup.dart';
+import 'package:flutter_application_1/main.dart'; // <-- Make sure MainScreen is here
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-void main() {
-  runApp(PetPalApp());
-
-}
-
-class PetPalApp extends StatelessWidget {
-  
-  
-  
-
+class SignInScreen extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PetPal',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: SignInScreen(),
-      debugShowCheckedModeBanner: false,
-    );
-  }
+  _SignInScreenState createState() => _SignInScreenState();
 }
 
-class SignInScreen extends StatelessWidget {
+class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final supabase = Supabase.instance.client;
 
-  SignInScreen({super.key});
-void loginUser(BuildContext context) async {
-    var userBox = await Hive.openBox('usersBox');
+  bool isLoading = false;
 
-    String email = emailController.text;
-    String password = passwordController.text;
+  Future<void> signIn(String email, String password) async {
+    setState(() => isLoading = true);
 
-   if(userBox.containsKey(email)) {
-      var userData = userBox.get(email);
-      if(userData['password'] == password) {
-        print("Login successful");
-        // Navigate to main app screen
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => MainScreen()));
-      } else {
-        print("Incorrect password");
+    try {
+      final response = await supabase.auth.signInWithPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      if (response.session != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("✅ Signed in successfully")),
+        );
+
+        // 🔹 Navigate to MainScreen after login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => MainScreen()),
+        );
       }
-    } else {
-      print("User not found");
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("❌ ${e.message}")),
+      );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text("PetPal", style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.blue,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16.0),
+            padding: const EdgeInsets.all(8.0),
             child: CircleAvatar(
-              backgroundColor: Colors.blue[100],
-              child: Icon(Icons.person, color: Colors.blue[900]),
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: Colors.blue),
             ),
-          ),
+          )
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SizedBox(height: 40),
-            Text(
-              "Sign In",
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 40),
+            Text("Sign In",
+                style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87)),
+            SizedBox(height: 32),
 
             // Email
             TextField(
@@ -81,11 +79,10 @@ void loginUser(BuildContext context) async {
               decoration: InputDecoration(
                 labelText: "Email",
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 16),
 
             // Password
             TextField(
@@ -94,28 +91,36 @@ void loginUser(BuildContext context) async {
               decoration: InputDecoration(
                 labelText: "Password",
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                    borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            SizedBox(height: 30),
+            SizedBox(height: 24),
 
             // Sign In Button
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => loginUser(context),
+                onPressed: isLoading
+                    ? null
+                    : () => signIn(
+                          emailController.text,
+                          passwordController.text,
+                        ),
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  backgroundColor: Colors.blue,
+                      borderRadius: BorderRadius.circular(12)),
                 ),
-                child: Text("Sign In", style: TextStyle(fontSize: 16)),
+                child: isLoading
+                    ? CircularProgressIndicator(color: Colors.white)
+                    : Text("Sign In",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
-            SizedBox(height: 20),
+
+            SizedBox(height: 16),
 
             // Register Link
             Row(
@@ -123,26 +128,23 @@ void loginUser(BuildContext context) async {
               children: [
                 Text("Don’t have an account? "),
                 GestureDetector(
-                  onTap: (
-                  ) {
-                    Navigator.push(context, MaterialPageRoute(builder:(context) => SignUpScreen())  );
-            
-                    // Navigate to Register
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SignUpScreen(),
+                      ),
+                    );
                   },
-                  child: Text(
-                    "Register",
-                    style: TextStyle(
-                        color: Colors.blue, fontWeight: FontWeight.bold),
-                  ),
+                  child: Text("Register",
+                      style: TextStyle(
+                          color: Colors.blue, fontWeight: FontWeight.bold)),
                 ),
               ],
-            ),
+            )
           ],
         ),
       ),
-
-      // Bottom Navigation
-      
     );
   }
 }

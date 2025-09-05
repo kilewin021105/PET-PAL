@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/LoginForms/login.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 void main() async {
    WidgetsFlutterBinding.ensureInitialized();
-   await Hive.initFlutter();
-   await Hive.openBox('userBox');
-  runApp(const PetPalApp());
+    await Supabase.initialize(
+      url: 'https://xfmusoxrdhuzmaxffwyq.supabase.co',
+      anonKey:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmbXVzb3hyZGh1em1heGZmd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNzYyNzcsImV4cCI6MjA3MjY1MjI3N30.-VQ7z2fDpHnzBTgO1b9AhxzLwNRyO6fmzmoiM59a1Dk', 
+    );  
+  runApp( PetPalApp());
   
 }
 
@@ -70,9 +73,11 @@ class _MainScreenState extends State<MainScreen> {
 // ---------------- Dashboard Page (Today) ----------------
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
-
+  
+ 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
@@ -109,17 +114,18 @@ class DashboardPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 16),
                 Column(
+                  
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     Text(
-                      'Hello, John!',
-                      style: TextStyle(
+                      'Hello, John Doe',
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
+                    const SizedBox(height: 4),
+                    const Text(
                       'Welcome back to PetPal',
                       style: TextStyle(
                         color: Colors.grey,
@@ -369,7 +375,7 @@ class PetsPage extends StatefulWidget {
 }
 
 class _PetsPageState extends State<PetsPage> {
-  List<Map<String, String>> _pets = [];
+  final List<Map<String, String>> _pets = [];
 
   void _addPet() {
     String name = '';
