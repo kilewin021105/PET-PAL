@@ -8,6 +8,7 @@ import 'screens/dashboard.dart';
 import 'screens/healthOverview.dart';
 import 'screens/Articles.dart';
 import 'screens/settings.dart';
+
 Future<String?> getFullname() async {
   final supabase = Supabase.instance.client;
   final user = supabase.auth.currentUser;
@@ -50,7 +51,7 @@ class PetPalApp extends StatelessWidget {
       title: 'PetPal – Pet Care Organizer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.teal),
-      home: SignInScreen(), // 👈 Login first
+      home: SignInScreen(), 
     );
   }
 }
@@ -65,12 +66,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _pages = [
-    const DashboardPage(),
-    const PetsPage(),
-    const HealthOverviewPage(),
+  final List<Widget> _pages = const [
+    DashboardPage(),
+    PetsPage(),
+    HealthOverviewPage(),
     ArticlesPage(),
-    const SettingsPage(),
+    SettingPage(),
   ];
 
   void _onTabTapped(int index) {
@@ -91,34 +92,32 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.today), label: "Today"),
           BottomNavigationBarItem(icon: Icon(Icons.pets), label: "Pets"),
           BottomNavigationBarItem(
-              icon: Icon(Icons.health_and_safety), label: "Health"),
+            icon: Icon(Icons.health_and_safety),
+            label: "Health",
+          ),
           BottomNavigationBarItem(
-              icon: Icon(Icons.newspaper), label: "Articles"),
-          BottomNavigationBarItem(icon: Icon(Icons.settings), label: "Settings"),
+            icon: Icon(Icons.article_sharp),
+            label: "Articles/News",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: "Settings",
+          ),
         ],
       ),
     );
   }
 }
 
-
 // ---------------- Dashboard Page (Today) ----------------
-
 
 // ---------------- Pets Page ----------------
 
-
-  
-
-
 // ---------------- Health Overview Page ----------------
-
 
 // ---------------- Expenses Page ----------------
 
-
 // ---------------- Settings Page ----------------
-
 
 // ---------------- Dummy Pages for Navigation ----------------
 class PetProfilePage extends StatelessWidget {
