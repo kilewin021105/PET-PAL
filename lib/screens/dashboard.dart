@@ -308,7 +308,6 @@ class AccountPage extends StatelessWidget {
         children: [
           const SizedBox(height: 20),
 
-          // Profile Section
           Center(
             child: Column(
               children: const [
@@ -319,11 +318,11 @@ class AccountPage extends StatelessWidget {
                 ),
                 SizedBox(height: 10),
                 Text(
-                  "John Doe", // Replace with session.fullname if needed
+                  "Russel Aro",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  "johndoe@email.com", // Replace with session.email
+                  "RusselAro@email.com",
                   style: TextStyle(color: Colors.grey),
                 ),
               ],

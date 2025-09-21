@@ -1,19 +1,14 @@
 import 'package:flutter/material.dart';
 
 class SettingPage extends StatefulWidget {
-  final bool darkMode;
-  final ValueChanged<bool> onToggleDarkMode;
+  const SettingPage({super.key});
 
-  const SettingPage({
-    super.key,
-    required this.darkMode,
-    required this.onToggleDarkMode,
-  });
   @override
-  State<SettingPage> createState() => _SettingState();
+  _SettingState createState() => _SettingState();
 }
 
 class _SettingState extends State<SettingPage> {
+  bool _darkMode = false;
   bool _locationSharing = false;
   bool _cloudBackup = true;
   String _language = "English";
@@ -43,8 +38,8 @@ class _SettingState extends State<SettingPage> {
           _buildSectionHeader("App Preferences"),
           SwitchListTile(
             title: const Text("Dark Mode"),
-            value: widget.darkMode,
-            onChanged: widget.onToggleDarkMode,
+            value: _darkMode,
+            onChanged: (value) => setState(() => _darkMode = value),
           ),
           ListTile(
             title: const Text("Accent Color"),

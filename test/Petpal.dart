@@ -8,60 +8,10 @@ class PetPalApp extends StatefulWidget {
   const PetPalApp({super.key});
 
   @override
-  State<PetPalApp> createState() => _PetPalAppState();
+  State<PetPalApp> createState() => _MainScreenState();
 }
 
-class _PetPalAppState extends State<PetPalApp> {
-  bool _darkMode = false;
-
-  void toggleDarkMode(bool value) {
-    setState(() {
-      _darkMode = value;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'PetPal 🐾 Pet Care Organizer',
-      debugShowCheckedModeBanner: false,
-
-      // Light Theme
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        brightness: Brightness.light,
-      ),
-
-      // Dark Theme
-      darkTheme: ThemeData(
-        primarySwatch: Colors.teal,
-        brightness: Brightness.dark,
-      ),
-
-      // Switch depending on dark mode
-      themeMode: _darkMode ? ThemeMode.dark : ThemeMode.light,
-
-      // Pass toggle function to MainScreen (or Settings)
-      home: MainScreen(darkMode: _darkMode, onToggleDarkMode: toggleDarkMode),
-    );
-  }
-}
-
-class MainScreen extends StatefulWidget {
-  final bool darkMode;
-  final Function(bool) onToggleDarkMode;
-
-  const MainScreen({
-    super.key,
-    required this.darkMode,
-    required this.onToggleDarkMode,
-  });
-
-  @override
-  State<MainScreen> createState() => _MainScreenState();
-}
-
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<PetPalApp> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = const [
