@@ -17,68 +17,64 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   bool isLoading = false;
 
-Future<void> signUp() async {
-  final email = emailController.text.trim();
-  final password = passwordController.text.trim();
-  final confirmPassword = confirmController.text.trim();
-  final fullname = fullnameController.text.trim();
+  Future<void> signUp() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmController.text.trim();
+    final fullname = fullnameController.text.trim();
 
-  if (password != confirmPassword) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("❌ Passwords do not match")),
-    );
-    return;
-  }
-
-  setState(() => isLoading = true);
-
-  try {
-    // Step 1: Sign up with Supabase Auth
-    final response = await supabase.auth.signUp(
-      email: email,
-      password: password,
-      data: {
-    'fullname': fullname, // ✅ stored in metadata
-  },
-    );
-
-    final user = response.user;
-
-    // Step 2: Insert into profiles if sign up succeeded
-    if (user != null) {
-      await supabase.from('profiles').insert({
-        'id': user.id, // must match the foreign key to auth.users
-        'email': email,
-       
-        
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Account created successfully")),
-      );
-
-      Navigator.pop(context); // go back to Sign In
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text("📩 Please check your email to confirm your account")),
-      );
+    if (password != confirmPassword) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("❌ Passwords do not match")));
+      return;
     }
-  } on AuthException catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("❌ ${e.message}")),
-    );
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("❌ Unexpected error: $e")),
-    );
-  } finally {
-    setState(() => isLoading = false);
+
+    setState(() => isLoading = true);
+
+    try {
+      // Step 1: Sign up with Supabase Auth
+      final response = await supabase.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'fullname': fullname, // ✅ stored in metadata
+        },
+      );
+
+      final user = response.user;
+
+      // Step 2: Insert into profiles if sign up succeeded
+      if (user != null) {
+        await supabase.from('profiles').insert({
+          'id': user.id, // must match the foreign key to auth.users
+          'email': email,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("✅ Account created successfully")),
+        );
+
+        Navigator.pop(context); // go back to Sign In
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("📩 Please check your email to confirm your account"),
+          ),
+        );
+      }
+    } on AuthException catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ ${e.message}")));
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ Unexpected error: $e")));
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
-}
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +90,7 @@ Future<void> signUp() async {
               backgroundColor: Colors.white,
               child: Icon(Icons.person_add, color: Colors.blue),
             ),
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -102,11 +98,14 @@ Future<void> signUp() async {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Register",
-                style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87)),
+            Text(
+              "Register",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
             SizedBox(height: 32),
             //fullname
             TextField(
@@ -114,7 +113,8 @@ Future<void> signUp() async {
               decoration: InputDecoration(
                 labelText: "Full Name",
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             SizedBox(height: 16),
@@ -124,7 +124,8 @@ Future<void> signUp() async {
               decoration: InputDecoration(
                 labelText: "Email",
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             SizedBox(height: 16),
@@ -136,7 +137,8 @@ Future<void> signUp() async {
               decoration: InputDecoration(
                 labelText: "Password",
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             SizedBox(height: 16),
@@ -148,7 +150,8 @@ Future<void> signUp() async {
               decoration: InputDecoration(
                 labelText: "Confirm Password",
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             SizedBox(height: 24),
@@ -162,13 +165,18 @@ Future<void> signUp() async {
                   backgroundColor: Colors.blue,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: isLoading
                     ? CircularProgressIndicator(color: Colors.white)
-                    : Text("Register",
+                    : Text(
+                        "Register",
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
 
@@ -183,12 +191,16 @@ Future<void> signUp() async {
                   onTap: () {
                     Navigator.pop(context);
                   },
-                  child: Text("Sign In",
-                      style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    "Sign In",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

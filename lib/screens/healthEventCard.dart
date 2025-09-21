@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 class HealthEventCard extends StatelessWidget {
   final IconData icon;
   final Color iconColor;
@@ -29,11 +30,7 @@ class HealthEventCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
@@ -72,11 +69,7 @@ class HealthEventCard extends StatelessWidget {
             style: const TextStyle(color: Colors.black87, fontSize: 13),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 4,
-            children: tags,
-          ),
+          Wrap(spacing: 8, runSpacing: 4, children: tags),
         ],
       ),
     );

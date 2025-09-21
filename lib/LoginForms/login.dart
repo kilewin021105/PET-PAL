@@ -27,9 +27,9 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       if (response.session != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("✅ Signed in successfully")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("✅ Signed in successfully")));
 
         // 🔹 Navigate to MainScreen after login
         Navigator.pushReplacement(
@@ -38,9 +38,9 @@ class _SignInScreenState extends State<SignInScreen> {
         );
       }
     } on AuthException catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("❌ ${e.message}")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ ${e.message}")));
     } finally {
       setState(() => isLoading = false);
     }
@@ -60,7 +60,7 @@ class _SignInScreenState extends State<SignInScreen> {
               backgroundColor: Colors.white,
               child: Icon(Icons.person, color: Colors.blue),
             ),
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -68,11 +68,14 @@ class _SignInScreenState extends State<SignInScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text("Sign In",
-                style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87)),
+            Text(
+              "Sign In",
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
             SizedBox(height: 32),
 
             // Email
@@ -81,7 +84,8 @@ class _SignInScreenState extends State<SignInScreen> {
               decoration: InputDecoration(
                 labelText: "Email",
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             SizedBox(height: 16),
@@ -93,7 +97,8 @@ class _SignInScreenState extends State<SignInScreen> {
               decoration: InputDecoration(
                 labelText: "Password",
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
             SizedBox(height: 24),
@@ -104,21 +109,24 @@ class _SignInScreenState extends State<SignInScreen> {
               child: ElevatedButton(
                 onPressed: isLoading
                     ? null
-                    : () => signIn(
-                          emailController.text,
-                          passwordController.text,
-                        ),
+                    : () =>
+                          signIn(emailController.text, passwordController.text),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: isLoading
                     ? CircularProgressIndicator(color: Colors.white)
-                    : Text("Sign In",
+                    : Text(
+                        "Sign In",
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
 
@@ -133,17 +141,19 @@ class _SignInScreenState extends State<SignInScreen> {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => SignUpScreen(),
-                      ),
+                      MaterialPageRoute(builder: (context) => SignUpScreen()),
                     );
                   },
-                  child: Text("Register",
-                      style: TextStyle(
-                          color: Colors.blue, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    "Register",
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

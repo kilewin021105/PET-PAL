@@ -11,9 +11,7 @@ class PetPalApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PetPal Articles',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: ArticlesPage(),
     );
   }
@@ -24,7 +22,8 @@ class Article {
   final String description;
   final String imageUrl;
   final String altText;
-  final List<String> petTypes; // e.g. ['dog'], ['cat'], ['bird'], or empty for general
+  final List<String>
+  petTypes; // e.g. ['dog'], ['cat'], ['bird'], or empty for general
 
   Article({
     required this.title,
@@ -125,8 +124,7 @@ class _ArticlesPageState extends State<ArticlesPage>
     // Cat
     Article(
       title: 'Cat Enrichment Ideas',
-      description:
-          'Ways to stimulate your feline\'s mind and prevent boredom.',
+      description: 'Ways to stimulate your feline\'s mind and prevent boredom.',
       imageUrl: 'https://placehold.co/400x250',
       altText:
           'Curious ginger cat exploring indoor cat scratching post and toys',
@@ -134,8 +132,7 @@ class _ArticlesPageState extends State<ArticlesPage>
     ),
     Article(
       title: 'Common Cat Behaviors',
-      description:
-          'Decoding purring, scratching, and other feline actions.',
+      description: 'Decoding purring, scratching, and other feline actions.',
       imageUrl: 'https://placehold.co/400x250',
       altText:
           'Elegant siamese cat sitting on a window sill overlooking a city street',
@@ -229,18 +226,25 @@ class _ArticlesPageState extends State<ArticlesPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(article.title,
-                    style:
-                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                Text(
+                  article.title,
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 SizedBox(height: 6),
-                Text(article.description,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+                Text(
+                  article.description,
+                  style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                ),
                 SizedBox(height: 8),
                 TextButton(
                   onPressed: () {
                     // Placeholder for "Read More" action
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Read more tapped for "${article.title}"')),
+                      SnackBar(
+                        content: Text(
+                          'Read more tapped for "${article.title}"',
+                        ),
+                      ),
                     );
                   },
                   child: Text('Read More'),

@@ -1,5 +1,6 @@
 import 'healthEventCard.dart';
 import 'package:flutter/material.dart';
+
 class HealthOverviewPage extends StatelessWidget {
   const HealthOverviewPage({super.key});
 
@@ -9,10 +10,7 @@ class HealthOverviewPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Health Overview'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
         elevation: 0,
         backgroundColor: Colors.white,
@@ -61,19 +59,23 @@ class HealthOverviewPage extends StatelessWidget {
                         SizedBox(height: 2),
                         Text(
                           'Golden Retriever',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 13,
-                          ),
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
                         ),
                         SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.check_circle, color: Colors.green, size: 16),
+                            Icon(
+                              Icons.check_circle,
+                              color: Colors.green,
+                              size: 16,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               'All good',
-                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -94,18 +96,13 @@ class HealthOverviewPage extends StatelessWidget {
               children: [
                 const Text(
                   'Upcoming Health Events',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 TextButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.teal,
-                  ),
+                  style: TextButton.styleFrom(foregroundColor: Colors.teal),
                 ),
               ],
             ),
@@ -122,7 +119,11 @@ class HealthOverviewPage extends StatelessWidget {
               description: 'Give Luna her heart medication',
               tags: [
                 HealthTag(label: 'Luna', color: Colors.blueGrey),
-                HealthTag(label: 'Due now', color: Colors.red, bgColor: Colors.redAccent.withOpacity(0.15)),
+                HealthTag(
+                  label: 'Due now',
+                  color: Colors.red,
+                  bgColor: Colors.redAccent.withOpacity(0.15),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -138,8 +139,16 @@ class HealthOverviewPage extends StatelessWidget {
               description: 'Annual checkup for Charlie',
               tags: [
                 HealthTag(label: 'Charlie', color: Colors.blueGrey),
-                HealthTag(label: '2:00 PM', color: Colors.blue, bgColor: Colors.blue.withOpacity(0.15)),
-                HealthTag(label: 'Dr. Smith', color: Colors.deepPurple, bgColor: Colors.deepPurple.withOpacity(0.15)),
+                HealthTag(
+                  label: '2:00 PM',
+                  color: Colors.blue,
+                  bgColor: Colors.blue.withOpacity(0.15),
+                ),
+                HealthTag(
+                  label: 'Dr. Smith',
+                  color: Colors.deepPurple,
+                  bgColor: Colors.deepPurple.withOpacity(0.15),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -155,7 +164,11 @@ class HealthOverviewPage extends StatelessWidget {
               description: 'Annual rabies vaccination for Max',
               tags: [
                 HealthTag(label: 'Max', color: Colors.blueGrey),
-                HealthTag(label: 'Rabies', color: Colors.green, bgColor: Colors.green.withOpacity(0.15)),
+                HealthTag(
+                  label: 'Rabies',
+                  color: Colors.green,
+                  bgColor: Colors.green.withOpacity(0.15),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -171,8 +184,16 @@ class HealthOverviewPage extends StatelessWidget {
               description: 'FVRCP vaccination for Luna',
               tags: [
                 HealthTag(label: 'Luna', color: Colors.blueGrey),
-                HealthTag(label: 'FVRCP', color: Colors.orange, bgColor: Colors.orange.withOpacity(0.15)),
-                HealthTag(label: 'Overdue', color: Colors.orange, bgColor: Colors.orange.withOpacity(0.15)),
+                HealthTag(
+                  label: 'FVRCP',
+                  color: Colors.orange,
+                  bgColor: Colors.orange.withOpacity(0.15),
+                ),
+                HealthTag(
+                  label: 'Overdue',
+                  color: Colors.orange,
+                  bgColor: Colors.orange.withOpacity(0.15),
+                ),
               ],
             ),
             const SizedBox(height: 24),
@@ -182,4 +203,3 @@ class HealthOverviewPage extends StatelessWidget {
     );
   }
 }
-
