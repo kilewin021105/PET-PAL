@@ -1,26 +1,61 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter_application_1/screens/Articles.dart';
 
 void main() {
   runApp(const PetPalApp());
 }
 
-class PetPalApp extends StatelessWidget {
+class PetPalApp extends StatefulWidget {
   const PetPalApp({super.key});
+
+  @override
+  State<PetPalApp> createState() => _PetPalAppState();
+}
+
+class _PetPalAppState extends State<PetPalApp> {
+  bool _darkMode = false;
+
+  void toggleDarkMode(bool value) {
+    setState(() {
+      _darkMode = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PetPal – Pet Care Organizer',
+      title: 'PetPal 🐾 Pet Care Organizer',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primarySwatch: Colors.teal),
-      home: const MainScreen(),
+
+      // Light Theme
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        brightness: Brightness.light,
+      ),
+
+      // Dark Theme
+      darkTheme: ThemeData(
+        primarySwatch: Colors.teal,
+        brightness: Brightness.dark,
+      ),
+
+      // Switch depending on dark mode
+      themeMode: _darkMode ? ThemeMode.dark : ThemeMode.light,
+
+      // Pass toggle function to MainScreen (or Settings)
+      home: MainScreen(darkMode: _darkMode, onToggleDarkMode: toggleDarkMode),
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final bool darkMode;
+  final Function(bool) onToggleDarkMode;
+
+  const MainScreen({
+    super.key,
+    required this.darkMode,
+    required this.onToggleDarkMode,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -28,8 +63,9 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _selectedIndex = 0;
+
   final List<Widget> _pages = const [
-    TodayPage(),
+    //TodayPage(),
     PetsPage(),
     SchedulePage(),
     ArticlesPage(),
@@ -44,35 +80,75 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        onTap: _onTabTapped,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.today), label: "Today"),
-          BottomNavigationBarItem(icon: Icon(Icons.pets), label: "Pets"),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month),
-            label: "Schedule",
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 8)],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.attach_money),
-            label: "Articles",
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(Icons.today, "Today", 0),
+              _buildNavItem(Icons.pets, "Pets", 1),
+              _buildNavItem(Icons.calendar_month, "Schedule", 2),
+              _buildNavItem(Icons.article, "Articles", 3),
+              _buildNavItem(Icons.settings, "Settings", 4),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: "Settings",
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int index) {
+    final bool isSelected = _selectedIndex == index;
+
+    return GestureDetector(
+      onTap: () => _onTabTapped(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutBack,
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.teal.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TweenAnimationBuilder<double>(
+              tween: Tween(begin: 1, end: isSelected ? 1.3 : 1),
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOutBack,
+              builder: (context, value, child) => Transform.scale(
+                scale: value,
+                child: Icon(
+                  icon,
+                  color: isSelected ? Colors.teal : Colors.grey,
+                  size: 26,
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 300),
+              style: TextStyle(
+                fontSize: isSelected ? 14 : 12,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isSelected ? Colors.teal : Colors.grey,
+              ),
+              child: Text(label),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 // ---------------- Today Page ----------------
-class TodayPage extends StatelessWidget {
+/*class TodayPage extends StatelessWidget {
   const TodayPage({super.key});
 
   @override
@@ -87,7 +163,7 @@ class TodayPage extends StatelessWidget {
       ),
     );
   }
-}
+}*/
 
 // ---------------- Pets Page ----------------
 class PetsPage extends StatefulWidget {
@@ -101,22 +177,32 @@ class _PetsPageState extends State<PetsPage> {
   final List<Map<String, String>> _pets = [];
 
   void _addPet() {
-    String name = '';
-    String type = '';
+    _showPetDialog();
+  }
+
+  void _editPet(int index) {
+    _showPetDialog(editIndex: index);
+  }
+
+  void _showPetDialog({int? editIndex}) {
+    String name = editIndex != null ? _pets[editIndex]['name']! : '';
+    String type = editIndex != null ? _pets[editIndex]['type']! : '';
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Add Pet"),
+        title: Text(editIndex == null ? "Add Pet" : "Edit Pet"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               decoration: const InputDecoration(labelText: "Pet Name"),
+              controller: TextEditingController(text: name),
               onChanged: (value) => name = value,
             ),
             TextField(
               decoration: const InputDecoration(labelText: "Pet Type"),
+              controller: TextEditingController(text: type),
               onChanged: (value) => type = value,
             ),
           ],
@@ -127,15 +213,41 @@ class _PetsPageState extends State<PetsPage> {
             onPressed: () => Navigator.pop(context),
           ),
           ElevatedButton(
-            child: const Text("Add"),
+            child: Text(editIndex == null ? "Add" : "Save"),
             onPressed: () {
               if (name.isNotEmpty && type.isNotEmpty) {
                 setState(() {
-                  _pets.add({'name': name, 'type': type});
+                  if (editIndex == null) {
+                    _pets.add({'name': name, 'type': type});
+                  } else {
+                    _pets[editIndex] = {'name': name, 'type': type};
+                  }
                 });
                 Navigator.pop(context);
               }
             },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _viewPetDetails(Map<String, String> pet) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(pet['name'] ?? ''),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.pets, size: 50, color: Colors.teal),
+            Text("Type: ${pet['type']}"),
+          ],
+        ),
+        actions: [
+          TextButton(
+            child: const Text("Close"),
+            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -159,13 +271,23 @@ class _PetsPageState extends State<PetsPage> {
                   leading: const Icon(Icons.pets, color: Colors.teal),
                   title: Text(pet['name'] ?? ''),
                   subtitle: Text(pet['type'] ?? ''),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      setState(() {
-                        _pets.removeAt(index);
-                      });
-                    },
+                  onTap: () => _viewPetDetails(pet), // tap to view details
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit, color: Colors.blue),
+                        onPressed: () => _editPet(index),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          setState(() {
+                            _pets.removeAt(index);
+                          });
+                        },
+                      ),
+                    ],
                   ),
                 );
               },

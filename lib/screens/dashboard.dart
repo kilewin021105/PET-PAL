@@ -31,9 +31,7 @@ class ManagePetPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Manage ${pet['name']}")),
-      body: const Center(
-        child: Text("Here you can edit or delete the pet."),
-      ),
+      body: const Center(child: Text("Here you can edit or delete the pet.")),
     );
   }
 }
@@ -73,6 +71,36 @@ class _DashboardPageState extends State<DashboardPage> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        actions: [
+          IconButton(
+            //Remnder icon button
+            icon: const Icon(Icons.notifications_none, color: Colors.teal),
+            tooltip: "Reminders",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const RemindersPage()),
+              );
+            },
+          ),
+
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const AccountPage()),
+              );
+            },
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.0),
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: Colors.teal,
+                child: Icon(Icons.person, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
       ),
       backgroundColor: const Color(0xFFF7F8FA),
       body: SingleChildScrollView(
@@ -80,13 +108,27 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Greeting
+            // Greeting (make avatar clickable too if you want)
             Row(
               children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.teal[100],
-                  child: const Icon(Icons.person, color: Colors.teal, size: 32),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AccountPage(),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 28,
+                    backgroundColor: Colors.teal[100],
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.teal,
+                      size: 32,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Column(
@@ -112,9 +154,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
             // Pet cards
             pets.isEmpty
-                ? const Center(
-                    child: Text("No pets found. Add some pets!"),
-                  )
+                ? const Center(child: Text("No pets found. Add some pets!"))
                 : Column(
                     children: pets.map((pet) {
                       return Container(
@@ -136,8 +176,11 @@ class _DashboardPageState extends State<DashboardPage> {
                             CircleAvatar(
                               radius: 28,
                               backgroundColor: Colors.grey[200],
-                              child: const Icon(Icons.pets,
-                                  color: Colors.grey, size: 32),
+                              child: const Icon(
+                                Icons.pets,
+                                color: Colors.grey,
+                                size: 32,
+                              ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
@@ -179,7 +222,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                               ),
                               child: const Text('View Profile'),
                             ),
@@ -209,10 +254,7 @@ class _DashboardPageState extends State<DashboardPage> {
               children: [
                 const Text(
                   'Upcoming Reminders',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 TextButton.icon(
                   onPressed: () {
@@ -222,9 +264,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   },
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add'),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.teal,
-                  ),
+                  style: TextButton.styleFrom(foregroundColor: Colors.teal),
                 ),
               ],
             ),
@@ -254,6 +294,136 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 }
 
+class AccountPage extends StatelessWidget {
+  const AccountPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("My Account"),
+        backgroundColor: Colors.teal,
+      ),
+      body: ListView(
+        children: [
+          const SizedBox(height: 20),
+
+          // Profile Section
+          Center(
+            child: Column(
+              children: const [
+                CircleAvatar(
+                  radius: 40,
+                  backgroundColor: Colors.teal,
+                  child: Icon(Icons.person, size: 40, color: Colors.white),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  "John Doe", // Replace with session.fullname if needed
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  "johndoe@email.com", // Replace with session.email
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 30),
+          const Divider(),
+
+          // Account Options
+          ListTile(
+            leading: const Icon(Icons.person_outline, color: Colors.teal),
+            title: const Text("Edit Profile"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Edit Profile tapped")),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.lock_outline, color: Colors.teal),
+            title: const Text("Change Password"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Change Password tapped")),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.notifications_outlined,
+              color: Colors.teal,
+            ),
+            title: const Text("Notification Settings"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Notification Settings tapped")),
+              );
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text("Log Out", style: TextStyle(color: Colors.red)),
+            onTap: () async {
+              // 1. Log out from Supabase
+              await Supabase.instance.client.auth.signOut();
+
+              // 2. Show confirmation
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text("Logged out")));
+
+              // 3. Navigate back to login page
+              Navigator.pushReplacementNamed(context, '/login');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//Mao ni ang Reminders Page
+class RemindersPage extends StatelessWidget {
+  const RemindersPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("PetPal Reminders"),
+        backgroundColor: Colors.teal,
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: const [
+          ReminderCard(
+            icon: Icons.favorite_border,
+            title: 'Vet Check-up',
+            subtitle: 'Tomorrow, 2:00 PM',
+            badgeText: 'Due Soon',
+            badgeColor: Colors.teal,
+          ),
+          SizedBox(height: 12),
+          ReminderCard(
+            icon: Icons.science_outlined,
+            title: 'Medication',
+            subtitle: 'Daily at 8:00 AM',
+            badgeText: 'Daily',
+            badgeColor: Colors.green,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class ReminderCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -278,11 +448,7 @@ class ReminderCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -298,7 +464,10 @@ class ReminderCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
