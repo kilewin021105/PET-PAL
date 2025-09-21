@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 
 class SettingPage extends StatefulWidget {
-  const SettingPage({super.key});
+  final bool darkMode;
+  final ValueChanged<bool> onToggleDarkMode;
 
+  const SettingPage({
+    super.key,
+    required this.darkMode,
+    required this.onToggleDarkMode,
+  });
   @override
   State<SettingPage> createState() => _SettingState();
 }
 
 class _SettingState extends State<SettingPage> {
-  bool _darkMode = false;
-  bool _feedingReminders = true;
-  bool _vetReminders = true;
-  bool _walkReminders = false;
   bool _locationSharing = false;
   bool _cloudBackup = true;
   String _language = "English";
@@ -37,35 +39,12 @@ class _SettingState extends State<SettingPage> {
 
           const Divider(),
 
-          // ⏰ Reminders
-          _buildSectionHeader("Reminders"),
-          SwitchListTile(
-            title: const Text("Feeding Reminders"),
-            subtitle: const Text("Get notified when it’s meal time"),
-            value: _feedingReminders,
-            onChanged: (value) => setState(() => _feedingReminders = value),
-          ),
-          SwitchListTile(
-            title: const Text("Vet Appointment Reminders"),
-            subtitle: const Text("Stay updated on vet visits"),
-            value: _vetReminders,
-            onChanged: (value) => setState(() => _vetReminders = value),
-          ),
-          SwitchListTile(
-            title: const Text("Walk Reminders"),
-            subtitle: const Text("Don’t forget daily walks"),
-            value: _walkReminders,
-            onChanged: (value) => setState(() => _walkReminders = value),
-          ),
-
-          const Divider(),
-
           // 🎨 App Preferences
           _buildSectionHeader("App Preferences"),
           SwitchListTile(
             title: const Text("Dark Mode"),
-            value: _darkMode,
-            onChanged: (value) => setState(() => _darkMode = value),
+            value: widget.darkMode,
+            onChanged: widget.onToggleDarkMode,
           ),
           ListTile(
             title: const Text("Accent Color"),
@@ -109,29 +88,6 @@ class _SettingState extends State<SettingPage> {
           ),
 
           const Divider(),
-
-          // 👤 Account
-          _buildSectionHeader("Account"),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text("Profile"),
-            subtitle: const Text("Manage your PetPal account"),
-            onTap: () {
-              // Navigate to account page
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.lock),
-            title: const Text("Change Password"),
-            onTap: () {
-              // Navigate to password reset page
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text("Logout"),
-            onTap: () => _showLogoutDialog(),
-          ),
         ],
       ),
     );
@@ -226,28 +182,6 @@ class _SettingState extends State<SettingPage> {
   }
 
   // 🔹 Logout Dialog
-  void _showLogoutDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Logout"),
-        content: const Text("Are you sure you want to logout of PetPal?"),
-        actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Navigator.pop(context),
-          ),
-          TextButton(
-            child: const Text("Logout"),
-            onPressed: () {
-              Navigator.pop(context);
-              // TODO: add logout logic
-            },
-          ),
-        ],
-      ),
-    );
-  }
 
   // 🔹 Helper: Radio Option
   Widget _buildRadioOption(

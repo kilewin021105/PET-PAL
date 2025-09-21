@@ -51,7 +51,7 @@ class PetPalApp extends StatelessWidget {
       title: 'PetPal – Pet Care Organizer',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(primarySwatch: Colors.teal),
-      home: SignInScreen(), 
+      home: SignInScreen(), // 👈 Login first
     );
   }
 }

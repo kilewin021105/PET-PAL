@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 void main() {
-  runApp(const PetPalApp());
+  runApp(PetPalApp());
 }
 
 class PetPalApp extends StatelessWidget {
@@ -15,7 +14,7 @@ class PetPalApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const ArticlesPage(),
+      home: ArticlesPage(),
     );
   }
 }
@@ -25,8 +24,7 @@ class Article {
   final String description;
   final String imageUrl;
   final String altText;
-  final List<String> petTypes;
-  final String url;
+  final List<String> petTypes; // e.g. ['dog'], ['cat'], ['bird'], or empty for general
 
   Article({
     required this.title,
@@ -34,7 +32,6 @@ class Article {
     required this.imageUrl,
     required this.altText,
     required this.petTypes,
-    required this.url,
   });
 }
 
@@ -49,33 +46,34 @@ class _ArticlesPageState extends State<ArticlesPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  // Sample articles data
   final List<Article> nutritionArticles = [
     Article(
       title: 'Balanced Nutrition for Dogs',
       description:
           'Understand the essential nutrients your canine companion needs, from proteins to vitamins, to ensure a healthy and active life.',
-      imageUrl: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400&h=250&fit=crop&crop=center',
-      altText: 'Healthy dog food in a bowl',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Colorful bowl of healthy dry kibble mixed with fresh vegetables and cooked meat for dogs, placed on a white ceramic bowl',
       petTypes: ['dog'],
-      url: 'https://www.akc.org/expert-advice/nutrition/dog-nutrition-tips/',
     ),
     Article(
       title: 'Cat Nutrition Essentials',
       description:
           'Explore what makes a perfect meal for your feline friend, including the role of taurine and hydration tips.',
-      imageUrl: 'https://images.unsplash.com/photo-1548247416-ec66f4900b2e?w=400&h=250&fit=crop&crop=center',
-      altText: 'Fresh fish and greens in a cat bowl',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Fresh fish fillets, rice, and mixed greens arranged in a cat food bowl on a sleek countertop',
       petTypes: ['cat'],
-      url: 'https://www.aspca.org/pet-care/cat-care/cat-nutrition-tips',
     ),
     Article(
       title: 'Feeding Your Pet Bird',
       description:
           'From seed mixes to fresh produce, learn how to provide optimal nutrition for vibrant plumage and energy.',
-      imageUrl: 'https://images.unsplash.com/photo-1452570053594-1b985d6ea890?w=400&h=250&fit=crop&crop=center',
-      altText: 'Bird food assortment',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Assortment of seeds, fruits, and nutrients laid out in a colorful pet bird feeder tray',
       petTypes: ['bird'],
-      url: 'https://www.petmd.com/bird/nutrition/evr_bd_feeding_your_pet_bird',
     ),
   ];
 
@@ -84,88 +82,91 @@ class _ArticlesPageState extends State<ArticlesPage>
       title: '5-Minute Dog Brush Routine',
       description:
           'A speedy guide to removing dirt, mats, and loose fur to maintain your dog\'s coat in top condition.',
-      imageUrl: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=250&fit=crop&crop=center',
-      altText: 'Brushing dog coat',
+      imageUrl: '',
+      altText: '',
       petTypes: ['dog'],
-      url: 'https://www.petmd.com/dog/grooming/how-brush-your-dog',
     ),
     Article(
       title: 'Express Cat Nail Trim',
       description:
           'Tips for quick and safe nail trimming to prevent scratches and promote good paw health.',
-      imageUrl: 'https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?w=400&h=250&fit=crop&crop=center',
-      altText: 'Trimming cat nails',
+      imageUrl: '',
+      altText: '',
       petTypes: ['cat'],
-      url: 'https://www.aspca.org/pet-care/cat-care/cat-grooming-tips',
     ),
     Article(
       title: 'Bird Wing Clipping Simplified',
       description:
           'Step-by-step for trimming feathers safely to keep your bird grounded while maintaining flight muscles.',
-      imageUrl: 'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&h=250&fit=crop&crop=center',
-      altText: 'Bird grooming',
+      imageUrl: '',
+      altText: '',
       petTypes: ['bird'],
-      url: 'https://www.petmd.com/bird/care/evr_bd_wing_clipping',
     ),
   ];
 
   final List<Article> recommendedArticles = [
+    // Dog
     Article(
       title: 'Dog Exercise Routines',
       description: 'Tailored workouts to keep your canine active and happy.',
-      imageUrl: 'https://images.unsplash.com/photo-1551717743-49959800b1f6?w=400&h=250&fit=crop&crop=center',
-      altText: 'Dog fetching ball',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Playful golden retriever dog fetching a ball in a sunny park with green grass',
       petTypes: ['dog'],
-      url: 'https://www.akc.org/expert-advice/health/puppy-exercise-too-much-too-little/',
     ),
     Article(
       title: 'Dog Health Checkups',
       description: 'What to expect at vet visits for optimal health.',
-      imageUrl: 'https://images.unsplash.com/photo-1576201836106-db1758fd1c97?w=400&h=250&fit=crop&crop=center',
-      altText: 'Vet examining dog',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Veterinarian holding a stethoscope to a labrador dog\'s chest in a clinical setting',
       petTypes: ['dog'],
-      url: 'https://www.petmd.com/dog/wellness/evr_dg_routine_veterinary_care',
     ),
+    // Cat
     Article(
       title: 'Cat Enrichment Ideas',
-      description: 'Ways to stimulate your feline\'s mind and prevent boredom.',
-      imageUrl: 'https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=400&h=250&fit=crop&crop=center',
-      altText: 'Cat with toys',
+      description:
+          'Ways to stimulate your feline\'s mind and prevent boredom.',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Curious ginger cat exploring indoor cat scratching post and toys',
       petTypes: ['cat'],
-      url: 'https://www.aspca.org/pet-care/cat-care/enriching-your-cats-life',
     ),
     Article(
       title: 'Common Cat Behaviors',
-      description: 'Decoding purring, scratching, and other feline actions.',
-      imageUrl: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&h=250&fit=crop&crop=center',
-      altText: 'Siamese cat by window',
+      description:
+          'Decoding purring, scratching, and other feline actions.',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Elegant siamese cat sitting on a window sill overlooking a city street',
       petTypes: ['cat'],
-      url: 'https://www.petmd.com/cat/behavior/evr_ct_why_do_cats_purr',
     ),
+    // Bird
     Article(
       title: 'Bird Vocalization Training',
       description: 'Teaching your bird to mimic and communicate.',
-      imageUrl: 'https://images.unsplash.com/photo-1552728089-57bdde30beb3?w=400&h=250&fit=crop&crop=center',
-      altText: 'Parrot talking',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Vibrant parrot perched on a branch with tropical leaves in a bright indoor aviary',
       petTypes: ['bird'],
-      url: 'https://www.petmd.com/bird/behavior/evr_bd_teaching_your_bird_to_talk',
     ),
     Article(
       title: 'Bird Cage Essentials',
       description: 'Must-have setup for a comfortable bird habitat.',
-      imageUrl: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=400&h=250&fit=crop&crop=center',
-      altText: 'Bird cage setup',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Assorted bird cages with different types of seed, perches, and water dishes',
       petTypes: ['bird'],
-      url: 'https://www.petmd.com/bird/care/evr_bd_bird_cage_setup',
     ),
+    // Other
     Article(
       title: 'General Exotic Pet Care',
       description:
           'Basic tips for rabbits, hamsters, and other non-traditional pets.',
-      imageUrl: 'https://images.unsplash.com/photo-1585110396000-c9ffd4e4b308?w=400&h=250&fit=crop&crop=center',
-      altText: 'Exotic pets care',
+      imageUrl: 'https://placehold.co/400x250',
+      altText:
+          'Collage of various exotic pets like hamsters, rabbits, and fish in pet-friendly containers',
       petTypes: ['other'],
-      url: 'https://www.aspca.org/pet-care/small-pet-care',
     ),
   ];
 
@@ -185,28 +186,12 @@ class _ArticlesPageState extends State<ArticlesPage>
   }
 
   List<Article> getFilteredRecommendedArticles() {
-    if (selectedPetType == null) return [];
+    if (selectedPetType == null || selectedPetType == '') {
+      return [];
+    }
     return recommendedArticles
         .where((article) => article.petTypes.contains(selectedPetType))
         .toList();
-  }
-
-  Future<void> _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        throw 'Could not launch $url';
-      }
-    } catch (e) {
-      // Handle error - show a snackbar or dialog
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not open article: $e')),
-        );
-      }
-    }
   }
 
   Widget buildArticleCard(Article article) {
@@ -219,7 +204,7 @@ class _ArticlesPageState extends State<ArticlesPage>
         children: [
           if (article.imageUrl.isNotEmpty)
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               child: Image.network(
                 article.imageUrl,
                 height: 150,
@@ -245,15 +230,20 @@ class _ArticlesPageState extends State<ArticlesPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(article.title,
-                    style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 6),
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                SizedBox(height: 6),
                 Text(article.description,
                     style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-                const SizedBox(height: 8),
+                SizedBox(height: 8),
                 TextButton(
-                  onPressed: () => _launchURL(article.url),
-                  child: const Text('Read More'),
+                  onPressed: () {
+                    // Placeholder for "Read More" action
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Read more tapped for "${article.title}"')),
+                    );
+                  },
+                  child: Text('Read More'),
                 ),
               ],
             ),
@@ -265,13 +255,13 @@ class _ArticlesPageState extends State<ArticlesPage>
 
   Widget buildNutritionTab() {
     return ListView(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 16),
       children: [
-        const Padding(
-          padding: EdgeInsets.all(12.0),
+        Padding(
+          padding: const EdgeInsets.all(12.0),
           child: Text(
             'Learn how to feed your pet properly with our comprehensive guides covering balanced diets, portion control, and specific nutritional needs.',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Colors.grey[800]),
           ),
         ),
         ...nutritionArticles.map(buildArticleCard),
@@ -281,13 +271,13 @@ class _ArticlesPageState extends State<ArticlesPage>
 
   Widget buildGroomingTab() {
     return ListView(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: EdgeInsets.only(bottom: 16),
       children: [
-        const Padding(
-          padding: EdgeInsets.all(12.0),
+        Padding(
+          padding: const EdgeInsets.all(12.0),
           child: Text(
             'Efficient care routines to keep your pet clean and healthy without spending hours. Perfect for on-the-go lifestyles.',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(fontSize: 16, color: Colors.grey[800]),
           ),
         ),
         ...groomingArticles.map(buildArticleCard),
@@ -298,18 +288,18 @@ class _ArticlesPageState extends State<ArticlesPage>
   Widget buildRecommendationsTab() {
     final filteredArticles = getFilteredRecommendedArticles();
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: DropdownButtonFormField<String>(
-            decoration: const InputDecoration(
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Column(
+        children: [
+          DropdownButtonFormField<String>(
+            decoration: InputDecoration(
               labelText: 'Choose Your Pet Type',
               border: OutlineInputBorder(),
             ),
-            value: selectedPetType,
-            items: const [
-              DropdownMenuItem(value: null, child: Text('-- Select Pet Type --')),
+            initialValue: selectedPetType,
+            items: [
+              DropdownMenuItem(value: '', child: Text('-- Select Pet Type --')),
               DropdownMenuItem(value: 'dog', child: Text('Dog')),
               DropdownMenuItem(value: 'cat', child: Text('Cat')),
               DropdownMenuItem(value: 'bird', child: Text('Bird')),
@@ -317,27 +307,39 @@ class _ArticlesPageState extends State<ArticlesPage>
             ],
             onChanged: (value) {
               setState(() {
-                selectedPetType = value;
+                selectedPetType = value == '' ? null : value;
               });
             },
           ),
-        ),
-        Expanded(
-          child: filteredArticles.isEmpty
-              ? Center(
-                  child: Text(
-                    selectedPetType == null
-                        ? 'Please select a pet type to see recommendations.'
-                        : 'No articles found for the selected pet type.',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
-                    textAlign: TextAlign.center,
-                  ),
-                )
-              : ListView(
-                  children: filteredArticles.map(buildArticleCard).toList(),
+          SizedBox(height: 16),
+          if (selectedPetType == null)
+            Expanded(
+              child: Center(
+                child: Text(
+                  'Please select a pet type to see recommendations.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
                 ),
-        ),
-      ],
+              ),
+            )
+          else if (filteredArticles.isEmpty)
+            Expanded(
+              child: Center(
+                child: Text(
+                  'No articles found for the selected pet type.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView(
+                children: filteredArticles.map(buildArticleCard).toList(),
+              ),
+            ),
+        ],
+      ),
     );
   }
 
@@ -345,10 +347,10 @@ class _ArticlesPageState extends State<ArticlesPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PetPal Articles'),
+        title: Text('PetPal Articles'),
         bottom: TabBar(
           controller: _tabController,
-          tabs: const [
+          tabs: [
             Tab(text: 'Nutrition'),
             Tab(text: 'Grooming'),
             Tab(text: 'Recommendations'),
