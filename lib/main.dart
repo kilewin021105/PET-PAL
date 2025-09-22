@@ -5,7 +5,8 @@ import 'package:flutter_application_1/services/SessionManager.dart';
 import 'package:provider/provider.dart';
 import 'screens/petsPage.dart';
 import 'screens/dashboard.dart';
-import 'screens/healthOverview.dart';
+// import 'screens/healthOverview.dart';
+import 'screens/nearby.dart';
 import 'screens/Articles.dart';
 import 'screens/settings.dart';
 
@@ -57,7 +58,8 @@ class PetPalApp extends StatelessWidget {
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -69,13 +71,20 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = const [
     DashboardPage(),
     PetsPage(),
-    HealthOverviewPage(),
+    // HealthOverviewPage(), // moved out of bottom nav
+    NearbyPage(),
     ArticlesPage(),
     SettingPage(),
   ];
 
   void _onTabTapped(int index) {
     setState(() => _selectedIndex = index);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
   }
 
   @override
@@ -92,12 +101,12 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.today), label: "Today"),
           BottomNavigationBarItem(icon: Icon(Icons.pets), label: "Pets"),
           BottomNavigationBarItem(
-            icon: Icon(Icons.health_and_safety),
-            label: "Health",
+            icon: Icon(Icons.place_outlined),
+            label: "Nearby",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.article_sharp),
-            label: "Articles/News",
+            label: "Pet Care Tips",
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

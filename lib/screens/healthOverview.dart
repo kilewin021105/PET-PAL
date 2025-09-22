@@ -2,13 +2,14 @@ import 'healthEventCard.dart';
 import 'package:flutter/material.dart';
 
 class HealthOverviewPage extends StatelessWidget {
-  const HealthOverviewPage({super.key});
+  final Map<String, dynamic> pet;
+  const HealthOverviewPage({super.key, required this.pet});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Health Overview'),
+        title: Text("${pet['name'] ?? 'Pet'} - Health Overview"),
         actions: [
           IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
@@ -48,22 +49,22 @@ class HealthOverviewPage extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
-                          'Max',
-                          style: TextStyle(
+                          pet['name'] ?? 'Pet',
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'Golden Retriever',
-                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                          "${pet['type'] ?? 'Type'} • ${pet['age'] ?? ''} years old",
+                          style: const TextStyle(color: Colors.grey, fontSize: 13),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
-                          children: [
+                          children: const [
                             Icon(
                               Icons.check_circle,
                               color: Colors.green,
@@ -79,8 +80,8 @@ class HealthOverviewPage extends StatelessWidget {
                             ),
                           ],
                         ),
-                        SizedBox(height: 2),
-                        Text(
+                        const SizedBox(height: 2),
+                        const Text(
                           'Next: Vaccination in 2 weeks',
                           style: TextStyle(color: Colors.grey, fontSize: 12),
                         ),
@@ -116,9 +117,9 @@ class HealthOverviewPage extends StatelessWidget {
               titleColor: Colors.red,
               dateLabel: 'Today',
               dateLabelColor: Colors.red,
-              description: 'Give Luna her heart medication',
+              description: "Give ${pet['name'] ?? 'your pet'}'s heart medication",
               tags: [
-                HealthTag(label: 'Luna', color: Colors.blueGrey),
+                HealthTag(label: pet['name'] ?? 'Pet', color: Colors.blueGrey),
                 HealthTag(
                   label: 'Due now',
                   color: Colors.red,
@@ -136,9 +137,9 @@ class HealthOverviewPage extends StatelessWidget {
               titleColor: Colors.blue,
               dateLabel: 'Tomorrow',
               dateLabelColor: Colors.blue,
-              description: 'Annual checkup for Charlie',
+              description: "Annual checkup for ${pet['name'] ?? 'your pet'}",
               tags: [
-                HealthTag(label: 'Charlie', color: Colors.blueGrey),
+                HealthTag(label: pet['name'] ?? 'Pet', color: Colors.blueGrey),
                 HealthTag(
                   label: '2:00 PM',
                   color: Colors.blue,
@@ -161,9 +162,9 @@ class HealthOverviewPage extends StatelessWidget {
               titleColor: Colors.green,
               dateLabel: 'Sep 15, 2025',
               dateLabelColor: Colors.grey,
-              description: 'Annual rabies vaccination for Max',
+              description: "Annual rabies vaccination for ${pet['name'] ?? 'your pet'}",
               tags: [
-                HealthTag(label: 'Max', color: Colors.blueGrey),
+                HealthTag(label: pet['name'] ?? 'Pet', color: Colors.blueGrey),
                 HealthTag(
                   label: 'Rabies',
                   color: Colors.green,
@@ -181,9 +182,9 @@ class HealthOverviewPage extends StatelessWidget {
               titleColor: Colors.orange,
               dateLabel: '3 days ago',
               dateLabelColor: Colors.orange,
-              description: 'FVRCP vaccination for Luna',
+              description: "FVRCP vaccination for ${pet['name'] ?? 'your pet'}",
               tags: [
-                HealthTag(label: 'Luna', color: Colors.blueGrey),
+                HealthTag(label: pet['name'] ?? 'Pet', color: Colors.blueGrey),
                 HealthTag(
                   label: 'FVRCP',
                   color: Colors.orange,

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/SessionManager.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'healthOverview.dart';
+import 'package:flutter_application_1/main.dart' show MainScreen;
 
 // Stub pages (replace with your own implementations)
 class PetProfilePage extends StatelessWidget {
@@ -211,7 +213,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        PetProfilePage(pet: pet),
+                                        HealthOverviewPage(pet: pet),
                                   ),
                                 );
                               },
@@ -230,12 +232,12 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
-                                  context,
+                                Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        ManagePetPage(pet: pet),
+                                        const MainScreen(initialIndex: 1),
                                   ),
+                                  (route) => false,
                                 );
                               },
                               child: const Text('Manage'),
