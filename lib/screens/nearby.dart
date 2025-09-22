@@ -151,7 +151,7 @@ class _NearbyPageState extends State<NearbyPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nearby Pet Stores & Vets in Bohol'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.grey,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
