@@ -151,7 +151,8 @@ class _NearbyPageState extends State<NearbyPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nearby Pet Stores & Vets in Bohol'),
-        backgroundColor: Colors.grey,
+        // Use theme color for AppBar
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -195,8 +196,9 @@ class _NearbyPageState extends State<NearbyPage> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white, width: 2),
                 boxShadow: const [
                   BoxShadow(
                     color: Colors.black12,
@@ -227,9 +229,12 @@ class _NearbyPageState extends State<NearbyPage> {
                           children: [
                             Text(
                               p['name'] as String,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -245,8 +250,10 @@ class _NearbyPageState extends State<NearbyPage> {
                                   child: Text(
                                     type,
                                     style: TextStyle(
-                                      color: color,
-                                      fontWeight: FontWeight.w600,
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.white
+                                          : color,
+                                      fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -256,15 +263,29 @@ class _NearbyPageState extends State<NearbyPage> {
                                 const SizedBox(width: 4),
                                 Text(
                                   p['distance'] as String,
-                                  style: const TextStyle(
-                                      color: Colors.grey, fontSize: 12),
+                                  style: TextStyle(
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white70
+                                        : Colors.grey,
+                                    fontWeight: Theme.of(context).brightness == Brightness.dark
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 6),
                             Text(
                               p['address'] as String,
-                              style: const TextStyle(color: Colors.black87),
+                              style: TextStyle(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black87,
+                                fontWeight: Theme.of(context).brightness == Brightness.dark
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(

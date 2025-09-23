@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../main.dart'; // Import themeNotifier
+
 class SettingPage extends StatefulWidget {
   const SettingPage({super.key});
 
@@ -8,7 +10,6 @@ class SettingPage extends StatefulWidget {
 }
 
 class _SettingState extends State<SettingPage> {
-  bool _darkMode = false;
   bool _locationSharing = false;
   bool _cloudBackup = true;
   String _language = "English";
@@ -24,7 +25,12 @@ class _SettingState extends State<SettingPage> {
           // 🐾 Pet Profile Section
           _buildSectionHeader("Pet Profile"),
           ListTile(
-            leading: const Icon(Icons.pets),
+            leading: Icon(
+              Icons.pets,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.teal,
+            ),
             title: const Text("My Pets"),
             subtitle: const Text("View and edit your pets’ info"),
             onTap: () {
@@ -38,19 +44,33 @@ class _SettingState extends State<SettingPage> {
           _buildSectionHeader("App Preferences"),
           SwitchListTile(
             title: const Text("Dark Mode"),
-            value: _darkMode,
-            onChanged: (value) => setState(() => _darkMode = value),
+            value: themeNotifier.value == ThemeMode.dark,
+            onChanged: (value) {
+              setState(() {
+                themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
+              });
+            },
           ),
           ListTile(
             title: const Text("Accent Color"),
             subtitle: Text(_accentColor),
-            trailing: const Icon(Icons.arrow_forward_ios),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.teal,
+            ),
             onTap: () => _showAccentColorDialog(),
           ),
           ListTile(
             title: const Text("Language"),
             subtitle: Text(_language),
-            trailing: const Icon(Icons.arrow_forward_ios),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.teal,
+            ),
             onTap: () => _showLanguageDialog(),
           ),
 
@@ -78,7 +98,12 @@ class _SettingState extends State<SettingPage> {
           ListTile(
             title: const Text("Notification Sound"),
             subtitle: Text(_notificationSound),
-            trailing: const Icon(Icons.arrow_forward_ios),
+            trailing: Icon(
+              Icons.arrow_forward_ios,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white
+                  : Colors.teal,
+            ),
             onTap: () => _showNotificationSoundDialog(),
           ),
 

@@ -71,12 +71,16 @@ class _DashboardPageState extends State<DashboardPage> {
       appBar: AppBar(
         title: const Text('Dashboard'),
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        // Use theme colors for AppBar
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
           IconButton(
             //Remnder icon button
-            icon: const Icon(Icons.notifications_none, color: Colors.teal),
+            icon: const Icon(
+              Icons.notifications_none,
+              color: Color.fromARGB(255, 218, 226, 226),
+            ),
             tooltip: "Reminders",
             onPressed: () {
               Navigator.push(
@@ -104,7 +108,7 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         child: Column(
@@ -163,8 +167,9 @@ class _DashboardPageState extends State<DashboardPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: Colors.white, width: 2),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black12,
@@ -191,16 +196,30 @@ class _DashboardPageState extends State<DashboardPage> {
                                 children: [
                                   Text(
                                     pet['name'] ?? '',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : Colors.black,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
                                     "${pet['type']} • ${pet['age']} years old",
-                                    style: const TextStyle(
-                                      color: Colors.grey,
+                                    style: TextStyle(
+                                      fontWeight:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? FontWeight.bold
+                                          : FontWeight.normal,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white70
+                                          : Colors.grey,
                                       fontSize: 13,
                                     ),
                                   ),
@@ -346,16 +365,6 @@ class AccountPage extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.lock_outline, color: Colors.teal),
-            title: const Text("Change Password"),
-            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Change Password tapped")),
-              );
-            },
-          ),
-          ListTile(
             leading: const Icon(
               Icons.notifications_outlined,
               color: Colors.teal,
@@ -370,18 +379,12 @@ class AccountPage extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: const Text("Log Out", style: TextStyle(color: Colors.red)),
-            onTap: () async {
-              // 1. Log out from Supabase
-              await Supabase.instance.client.auth.signOut();
-
-              // 2. Show confirmation
+            title: const Text("Logout"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(const SnackBar(content: Text("Logged out")));
-
-              // 3. Navigate back to login page
-              Navigator.pushReplacementNamed(context, '/login');
+              ).showSnackBar(const SnackBar(content: Text("Logout tapped")));
             },
           ),
         ],
@@ -443,11 +446,13 @@ class ReminderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white, width: 2),
         boxShadow: [
           BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
         ],
@@ -455,8 +460,8 @@ class ReminderCard extends StatelessWidget {
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.grey[100],
-            child: Icon(icon, color: Colors.teal),
+            backgroundColor: Colors.teal,
+            child: Icon(icon, color: Colors.white),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -465,15 +470,20 @@ class ReminderCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
+                    color: isDark ? Colors.white : Colors.black,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(color: Colors.grey, fontSize: 13),
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : Colors.grey,
+                    fontWeight: isDark ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 13,
+                  ),
                 ),
               ],
             ),
