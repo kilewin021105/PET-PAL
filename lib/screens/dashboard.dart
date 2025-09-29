@@ -1,9 +1,15 @@
+import 'add_pet_dialog.dart';
+import '../services/reminder_count_service.dart' as count_service;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/SessionManager.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'healthOverview.dart';
 import 'package:flutter_application_1/main.dart' show MainScreen;
+import 'package:flutter_application_1/LoginForms/login.dart';
+import 'add_reminder_dialog.dart';
+import '../models/reminder.dart';
+import '../services/reminder_fetch_service.dart';
 
 // Stub pages (replace with your own implementations)
 class PetProfilePage extends StatelessWidget {
@@ -46,6 +52,14 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  int _reminderCount = 0;
+
+  Future<void> _fetchReminderCount() async {
+    final count = await count_service.getRemindersCount();
+    if (mounted) setState(() => _reminderCount = count);
+  }
+
+  late Future<List<Reminder>> _remindersFuture;
   final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> pets = [];
 
@@ -53,6 +67,8 @@ class _DashboardPageState extends State<DashboardPage> {
   void initState() {
     super.initState();
     _fetchPets();
+    _remindersFuture = fetchReminders();
+    _fetchReminderCount();
   }
 
   Future<void> _fetchPets() async {
@@ -75,21 +91,159 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
-          IconButton(
-            //Remnder icon button
-            icon: const Icon(
-              Icons.notifications_none,
-              color: Color.fromARGB(255, 218, 226, 226),
-            ),
-            tooltip: "Reminders",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const RemindersPage()),
-              );
-            },
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(
+                  Icons.notifications_none,
+                  color: Color.fromARGB(255, 218, 226, 226),
+                ),
+                tooltip: "Reminders",
+                onPressed: () {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(18),
+                      ),
+                    ),
+                    builder: (context) => Padding(
+                      padding: MediaQuery.of(context).viewInsets,
+                      child: DraggableScrollableSheet(
+                        expand: false,
+                        initialChildSize: 0.7,
+                        minChildSize: 0.4,
+                        maxChildSize: 0.95,
+                        builder: (context, scrollController) {
+                          return Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12.0,
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Padding(
+                                      padding: EdgeInsets.only(left: 16.0),
+                                      child: Text(
+                                        'PetPal Reminders',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton.icon(
+                                      onPressed: () async {
+                                        final added = await showDialog(
+                                          context: context,
+                                          builder: (context) =>
+                                              const AddReminderDialog(),
+                                        );
+                                        if (added == true) {
+                                          setState(() {
+                                            _remindersFuture = fetchReminders();
+                                          });
+                                          _fetchReminderCount();
+                                        }
+                                      },
+                                      icon: const Icon(Icons.add, size: 18),
+                                      label: const Text('Add Reminder'),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.teal,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: FutureBuilder<List<Reminder>>(
+                                  future: _remindersFuture,
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    } else if (snapshot.hasError) {
+                                      return Center(
+                                        child: Text(
+                                          'Error: \\${snapshot.error}',
+                                        ),
+                                      );
+                                    } else if (!snapshot.hasData ||
+                                        snapshot.data!.isEmpty) {
+                                      return const Center(
+                                        child: Text('No reminders found.'),
+                                      );
+                                    }
+                                    final reminders = snapshot.data!;
+                                    return ListView.separated(
+                                      controller: scrollController,
+                                      itemCount: reminders.length,
+                                      separatorBuilder: (context, i) =>
+                                          const Divider(height: 1),
+                                      itemBuilder: (context, i) {
+                                        final r = reminders[i];
+                                        return ListTile(
+                                          leading: const Icon(
+                                            Icons.notifications_active,
+                                            color: Colors.teal,
+                                          ),
+                                          title: Text(r.title),
+                                          subtitle: Text(r.description),
+                                          trailing: Text(
+                                            '${r.dateTime.month}/${r.dateTime.day}/${r.dateTime.year} ${r.dateTime.hour.toString().padLeft(2, '0')}:${r.dateTime.minute.toString().padLeft(2, '0')}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+              if (_reminderCount > 0)
+                Positioned(
+                  right: 10,
+                  top: 14,
+                  child: Container(
+                    padding: const EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    constraints: const BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
+                    child: Text(
+                      '$_reminderCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
           ),
-
           GestureDetector(
             onTap: () {
               Navigator.push(
@@ -156,7 +310,34 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ],
             ),
+
             const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    final added = await showDialog(
+                      context: context,
+                      builder: (context) => const AddPetDialog(),
+                    );
+                    if (added == true) {
+                      _fetchPets();
+                    }
+                  },
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text('Add Pet'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
 
             // Pet cards
             pets.isEmpty
@@ -268,46 +449,6 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
 
             const SizedBox(height: 28),
-
-            // Upcoming Reminders Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Upcoming Reminders',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Add Reminder tapped!')),
-                    );
-                  },
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add'),
-                  style: TextButton.styleFrom(foregroundColor: Colors.teal),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // Reminder Cards
-            const ReminderCard(
-              icon: Icons.favorite_border,
-              title: 'Vet Check-up',
-              subtitle: 'Tomorrow, 2:00 PM',
-              badgeText: 'Due Soon',
-              badgeColor: Colors.teal,
-            ),
-            const SizedBox(height: 12),
-            const ReminderCard(
-              icon: Icons.science_outlined,
-              title: 'Medication',
-              subtitle: 'Daily at 8:00 AM',
-              badgeText: 'Daily',
-              badgeColor: Colors.green,
-            ),
-            const SizedBox(height: 24),
           ],
         ),
       ),
@@ -320,6 +461,9 @@ class AccountPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final session = Provider.of<SessionManager>(context);
+    final fullname = session.fullname ?? "User";
+    final email = session.user?.email ?? "No Email";
     return Scaffold(
       appBar: AppBar(
         title: const Text("My Account"),
@@ -331,21 +475,21 @@ class AccountPage extends StatelessWidget {
 
           Center(
             child: Column(
-              children: const [
-                CircleAvatar(
+              children: [
+                const CircleAvatar(
                   radius: 40,
                   backgroundColor: Colors.teal,
                   child: Icon(Icons.person, size: 40, color: Colors.white),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
-                  "Russel Aro",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  fullname,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                Text(
-                  "RusselAro@email.com",
-                  style: TextStyle(color: Colors.grey),
-                ),
+                Text(email, style: const TextStyle(color: Colors.grey)),
               ],
             ),
           ),
@@ -381,10 +525,12 @@ class AccountPage extends StatelessWidget {
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text("Logout"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text("Logout tapped")));
+            onTap: () async {
+              await session.signOut();
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const SignInScreen()),
+                (route) => false,
+              );
             },
           ),
         ],

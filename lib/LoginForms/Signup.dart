@@ -9,7 +9,8 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
-  final TextEditingController fullnameController = TextEditingController();
+  final TextEditingController firstnameController = TextEditingController();
+  final TextEditingController lastnameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmController = TextEditingController();
@@ -21,12 +22,21 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
     final confirmPassword = confirmController.text.trim();
-    final fullname = fullnameController.text.trim();
+    final firstname = firstnameController.text.trim();
+    final lastname = lastnameController.text.trim();
 
     if (password != confirmPassword) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("❌ Passwords do not match")));
+      return;
+    }
+    if (firstname.isEmpty || lastname.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("❌ Please enter your first and last name"),
+        ),
+      );
       return;
     }
 
@@ -37,9 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       final response = await supabase.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'fullname': fullname, // ✅ stored in metadata
-        },
+        data: {'firstname': firstname, 'lastname': lastname},
       );
 
       final user = response.user;
@@ -49,6 +57,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         await supabase.from('profiles').insert({
           'id': user.id, // must match the foreign key to auth.users
           'email': email,
+          'firstname': firstname,
+          'lastname': lastname,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
@@ -107,11 +117,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
             ),
             SizedBox(height: 32),
-            //fullname
+            // First Name
             TextField(
-              controller: fullnameController,
+              controller: firstnameController,
               decoration: InputDecoration(
-                labelText: "Full Name",
+                labelText: "First Name",
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            SizedBox(height: 16),
+            // Last Name
+            TextField(
+              controller: lastnameController,
+              decoration: InputDecoration(
+                labelText: "Last Name",
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),

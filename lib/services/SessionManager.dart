@@ -2,13 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SessionManager extends ChangeNotifier {
+  Future<void> signOut() async {
+    await supabase.auth.signOut();
+    _user = null;
+    _firstName = null;
+    _lastName = null;
+    notifyListeners();
+  }
+
   final supabase = Supabase.instance.client;
 
   User? _user;
-  String? _fullname;
+  String? _firstName;
+  String? _lastName;
 
   User? get user => _user;
-  String? get fullname => _fullname;
+  String? get firstName => _firstName;
+  String? get lastName => _lastName;
+  String? get fullname => (_firstName != null && _lastName != null)
+      ? '$_firstName $_lastName'
+      : null;
 
   SessionManager() {
     // Watch for auth changes (login, logout, refresh)
@@ -21,7 +34,8 @@ class SessionManager extends ChangeNotifier {
         _fetchProfile();
       } else if (event == AuthChangeEvent.signedOut) {
         _user = null;
-        _fullname = null;
+        _firstName = null;
+        _lastName = null;
       }
       notifyListeners();
     });
@@ -37,11 +51,12 @@ class SessionManager extends ChangeNotifier {
     if (_user == null) return;
     final response = await supabase
         .from('profiles')
-        .select('fullname')
+        .select('first_name, last_name')
         .eq('id', _user!.id)
         .maybeSingle();
 
-    _fullname = response?['fullname'] as String?;
+    _firstName = response?['first_name'] as String?;
+    _lastName = response?['last_name'] as String?;
     notifyListeners();
   }
 }

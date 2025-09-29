@@ -124,7 +124,7 @@ class _NearbyPageState extends State<NearbyPage> {
   }
 
   Future<void> _openGoogleMaps(String address) async {
-    final query = Uri.encodeComponent(address + ', Bohol, Philippines');
+    final query = Uri.encodeComponent('$address, Bohol, Philippines');
     final url = 'https://www.google.com/maps/search/?api=1&query=$query';
     if (await canLaunchUrl(Uri.parse(url))) {
       await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
