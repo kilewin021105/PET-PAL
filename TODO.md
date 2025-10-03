@@ -1,0 +1,7 @@
+- [x] Update _loadPets to select all fields (no change needed as select() gets all)
+- [x] Update _addPet dialog to include description, breed, color, gender fields
+- [x] Add _editPet method with pre-filled dialog and update functionality
+- [x] Change ListView to use Cards for better display of pet information
+- [x] Add edit button alongside delete in each pet card
+- [ ] Test add, edit, delete with new fields
+- [ ] Ensure Supabase table schema includes new columns (description, breed, color, gender)
