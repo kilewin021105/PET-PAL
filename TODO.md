@@ -3,5 +3,6 @@
 - [x] Add _editPet method with pre-filled dialog and update functionality
 - [x] Change ListView to use Cards for better display of pet information
 - [x] Add edit button alongside delete in each pet card
+- [x] Fix Android build error by enabling core library desugaring and updating desugar_jdk_libs version
 - [ ] Test add, edit, delete with new fields
 - [ ] Ensure Supabase table schema includes new columns (description, breed, color, gender)
