@@ -12,9 +12,7 @@ class SettingPage extends StatefulWidget {
 class _SettingState extends State<SettingPage> {
   bool _locationSharing = false;
   bool _cloudBackup = true;
-  String _language = "English";
   String _notificationSound = "Default";
-  String _accentColor = "Blue";
 
   @override
   Widget build(BuildContext context) {
@@ -50,28 +48,6 @@ class _SettingState extends State<SettingPage> {
                 themeNotifier.value = value ? ThemeMode.dark : ThemeMode.light;
               });
             },
-          ),
-          ListTile(
-            title: const Text("Accent Color"),
-            subtitle: Text(_accentColor),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.teal,
-            ),
-            onTap: () => _showAccentColorDialog(),
-          ),
-          ListTile(
-            title: const Text("Language"),
-            subtitle: Text(_language),
-            trailing: Icon(
-              Icons.arrow_forward_ios,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : Colors.teal,
-            ),
-            onTap: () => _showLanguageDialog(),
           ),
 
           const Divider(),
@@ -125,54 +101,8 @@ class _SettingState extends State<SettingPage> {
   }
 
   // 🔹 Language Dialog
-  void _showLanguageDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Select Language"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildRadioOption("English", _language, (val) {
-              setState(() => _language = val);
-              Navigator.pop(context);
-            }),
-            _buildRadioOption("Tagalog", _language, (val) {
-              setState(() => _language = val);
-              Navigator.pop(context);
-            }),
-          ],
-        ),
-      ),
-    );
-  }
 
   // 🔹 Accent Color Dialog
-  void _showAccentColorDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Select Accent Color"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildRadioOption("Blue", _accentColor, (val) {
-              setState(() => _accentColor = val);
-              Navigator.pop(context);
-            }),
-            _buildRadioOption("Green", _accentColor, (val) {
-              setState(() => _accentColor = val);
-              Navigator.pop(context);
-            }),
-            _buildRadioOption("Orange", _accentColor, (val) {
-              setState(() => _accentColor = val);
-              Navigator.pop(context);
-            }),
-          ],
-        ),
-      ),
-    );
-  }
 
   // 🔹 Notification Sound Dialog
   void _showNotificationSoundDialog() {
