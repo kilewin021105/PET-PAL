@@ -60,7 +60,10 @@ class HealthOverviewPage extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           "${pet['type'] ?? 'Type'} • ${pet['age'] ?? ''} years old",
-                          style: const TextStyle(color: Colors.grey, fontSize: 13),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 13,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -117,7 +120,8 @@ class HealthOverviewPage extends StatelessWidget {
               titleColor: Colors.red,
               dateLabel: 'Today',
               dateLabelColor: Colors.red,
-              description: "Give ${pet['name'] ?? 'your pet'}'s heart medication",
+              description:
+                  "Give ${pet['name'] ?? 'your pet'}'s heart medication",
               tags: [
                 HealthTag(label: pet['name'] ?? 'Pet', color: Colors.blueGrey),
                 HealthTag(
@@ -162,7 +166,8 @@ class HealthOverviewPage extends StatelessWidget {
               titleColor: Colors.green,
               dateLabel: 'Sep 15, 2025',
               dateLabelColor: Colors.grey,
-              description: "Annual rabies vaccination for ${pet['name'] ?? 'your pet'}",
+              description:
+                  "Annual rabies vaccination for ${pet['name'] ?? 'your pet'}",
               tags: [
                 HealthTag(label: pet['name'] ?? 'Pet', color: Colors.blueGrey),
                 HealthTag(
