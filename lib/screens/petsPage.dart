@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'pet_dialog.dart';
 
 class PetsPage extends StatefulWidget {
   const PetsPage({super.key});
@@ -32,182 +33,23 @@ class _PetsPageState extends State<PetsPage> {
   }
 
   Future<void> _addPet() async {
-    final nameController = TextEditingController();
-    final typeController = TextEditingController();
-    final ageController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final breedController = TextEditingController();
-    final colorController = TextEditingController();
-    final genderController = TextEditingController();
-
-    showDialog(
+    final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Add Pet"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Pet Name"),
-              ),
-              TextField(
-                controller: typeController,
-                decoration: const InputDecoration(labelText: "Pet Type"),
-              ),
-              TextField(
-                controller: breedController,
-                decoration: const InputDecoration(labelText: "Breed"),
-              ),
-              TextField(
-                controller: ageController,
-                decoration: const InputDecoration(labelText: "Pet Age"),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: colorController,
-                decoration: const InputDecoration(labelText: "Color"),
-              ),
-              TextField(
-                controller: genderController,
-                decoration: const InputDecoration(labelText: "Gender"),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(labelText: "Description"),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Navigator.pop(context),
-          ),
-          ElevatedButton(
-            child: const Text("Add"),
-            onPressed: () async {
-              final user = Supabase.instance.client.auth.currentUser;
-              if (user == null) return;
-
-              final name = nameController.text.trim();
-              final type = typeController.text.trim();
-              final breed = breedController.text.trim();
-              final age = ageController.text.trim();
-              final color = colorController.text.trim();
-              final gender = genderController.text.trim();
-              final description = descriptionController.text.trim();
-
-              if (name.isNotEmpty && type.isNotEmpty && age.isNotEmpty) {
-                await Supabase.instance.client.from('pets').insert({
-                  'user_id': user.id,
-                  'name': name,
-                  'type': type,
-                  'breed': breed,
-                  'age': int.tryParse(age) ?? 0,
-                  'color': color,
-                  'gender': gender,
-                  'description': description,
-                });
-                Navigator.pop(context);
-                _loadPets(); // refresh pets after insert
-              }
-            },
-          ),
-        ],
-      ),
+      builder: (context) => PetDialog(),
     );
+    if (result == true) {
+      _loadPets();
+    }
   }
 
   Future<void> _editPet(Map<String, dynamic> pet) async {
-    final nameController = TextEditingController(text: pet['name'] ?? '');
-    final typeController = TextEditingController(text: pet['type'] ?? '');
-    final ageController = TextEditingController(text: pet['age']?.toString() ?? '');
-    final descriptionController = TextEditingController(text: pet['description'] ?? '');
-    final breedController = TextEditingController(text: pet['breed'] ?? '');
-    final colorController = TextEditingController(text: pet['color'] ?? '');
-    final genderController = TextEditingController(text: pet['gender'] ?? '');
-
-    showDialog(
+    final result = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edit Pet"),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Pet Name"),
-              ),
-              TextField(
-                controller: typeController,
-                decoration: const InputDecoration(labelText: "Pet Type"),
-              ),
-              TextField(
-                controller: breedController,
-                decoration: const InputDecoration(labelText: "Breed"),
-              ),
-              TextField(
-                controller: ageController,
-                decoration: const InputDecoration(labelText: "Pet Age"),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: colorController,
-                decoration: const InputDecoration(labelText: "Color"),
-              ),
-              TextField(
-                controller: genderController,
-                decoration: const InputDecoration(labelText: "Gender"),
-              ),
-              TextField(
-                controller: descriptionController,
-                decoration: const InputDecoration(labelText: "Description"),
-                maxLines: 3,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            child: const Text("Cancel"),
-            onPressed: () => Navigator.pop(context),
-          ),
-          ElevatedButton(
-            child: const Text("Update"),
-            onPressed: () async {
-              final name = nameController.text.trim();
-              final type = typeController.text.trim();
-              final breed = breedController.text.trim();
-              final age = ageController.text.trim();
-              final color = colorController.text.trim();
-              final gender = genderController.text.trim();
-              final description = descriptionController.text.trim();
-
-              if (name.isNotEmpty && type.isNotEmpty && age.isNotEmpty) {
-                await Supabase.instance.client
-                    .from('pets')
-                    .update({
-                      'name': name,
-                      'type': type,
-                      'breed': breed,
-                      'age': int.tryParse(age) ?? 0,
-                      'color': color,
-                      'gender': gender,
-                      'description': description,
-                    })
-                    .eq('id', pet['id']);
-                Navigator.pop(context);
-                _loadPets(); // refresh pets after update
-              }
-            },
-          ),
-        ],
-      ),
+      builder: (context) => PetDialog(pet: pet),
     );
+    if (result == true) {
+      _loadPets();
+    }
   }
 
   Future<void> _deletePet(String id) async {
@@ -229,7 +71,10 @@ class _PetsPageState extends State<PetsPage> {
               itemBuilder: (context, index) {
                 final pet = _pets[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -242,7 +87,10 @@ class _PetsPageState extends State<PetsPage> {
                             Expanded(
                               child: Text(
                                 pet['name'] ?? '',
-                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                             IconButton(
@@ -257,15 +105,18 @@ class _PetsPageState extends State<PetsPage> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "${pet['type'] ?? ''} • ${pet['breed'] ?? ''} • Age: ${pet['age'] ?? ''} • ${pet['color'] ?? ''} • ${pet['gender'] ?? ''}",
+                          "${pet['type'] ?? ''} • ${pet['species'] ?? ''} • Age: ${pet['age'] ?? ''} • ${pet['color'] ?? ''} • ${pet['gender'] ?? ''}",
                           style: const TextStyle(color: Colors.grey),
                         ),
-                        if (pet['description'] != null && pet['description'].isNotEmpty)
+                        if (pet['description'] != null &&
+                            pet['description'].isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
                               "Description: ${pet['description']}",
-                              style: const TextStyle(fontStyle: FontStyle.italic),
+                              style: const TextStyle(
+                                fontStyle: FontStyle.italic,
+                              ),
                             ),
                           ),
                       ],

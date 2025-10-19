@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/reminder.dart';
+import 'add_reminder_dialog.dart';
 import '../services/reminder_fetch_service.dart';
 
 class RemindersPage extends StatefulWidget {
@@ -40,12 +41,43 @@ class _RemindersPageState extends State<RemindersPage> {
             itemBuilder: (context, i) {
               final r = reminders[i];
               return ListTile(
-                leading: const Icon(Icons.notifications_active, color: Colors.teal),
+                leading: const Icon(
+                  Icons.notifications_active,
+                  color: Colors.teal,
+                ),
                 title: Text(r.title),
                 subtitle: Text(r.description),
-                trailing: Text(
-                  DateFormat('MMM d, yyyy h:mm a').format(r.dateTime),
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('MMM d, yyyy h:mm a').format(r.dateTime),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      tooltip: 'Edit Reminder',
+                      onPressed: () async {
+                        // Open dialog for editing
+                        final result = await showDialog(
+                          context: context,
+                          builder: (context) => AddReminderDialog(
+                            reminder: {
+                              'id': r.id,
+                              'title': r.title,
+                              'description': r.description,
+                              'date_time': r.dateTime.toIso8601String(),
+                            },
+                          ),
+                        );
+                        if (result != null) {
+                          setState(() {
+                            _remindersFuture = fetchReminders();
+                          });
+                        }
+                      },
+                    ),
+                  ],
                 ),
               );
             },
