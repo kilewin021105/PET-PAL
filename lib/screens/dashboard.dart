@@ -12,7 +12,6 @@ import 'package:flutter_application_1/LoginForms/login.dart';
 import 'add_reminder_dialog.dart';
 import '../models/reminder.dart';
 import '../services/reminder_fetch_service.dart';
-import 'package:flutter_application_1/InsideAcc/EditProfileTile.dart';
 
 // Stub pages (replace with your own implementations)
 class PetProfilePage extends StatelessWidget {
