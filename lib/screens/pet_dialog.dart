@@ -138,8 +138,8 @@ class _PetDialogState extends State<PetDialog> {
           onPressed: () => Navigator.pop(context),
         ),
         ElevatedButton(
-          child: Text(widget.pet == null ? "Add" : "Update"),
           onPressed: _submit,
+          child: Text(widget.pet == null ? "Add" : "Update"),
         ),
       ],
     );
