@@ -7,7 +7,7 @@ class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
 
   @override
-  _SignInScreenState createState() => _SignInScreenState();
+  State<SignInScreen> createState() => _SignInScreenState();
 }
 
 class _SignInScreenState extends State<SignInScreen> {
@@ -27,6 +27,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       if (response.session != null) {
+        if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text("✅ Signed in successfully")));
@@ -38,6 +39,7 @@ class _SignInScreenState extends State<SignInScreen> {
         );
       }
     } on AuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("❌ ${e.message}")));

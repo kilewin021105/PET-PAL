@@ -214,7 +214,7 @@ class _NearbyPageState extends State<NearbyPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       CircleAvatar(
-                        backgroundColor: color.withOpacity(0.1),
+                        backgroundColor: color.withValues(alpha: 0.1),
                         child: Icon(
                           type.toLowerCase() == 'vet'
                               ? Icons.local_hospital
@@ -245,7 +245,7 @@ class _NearbyPageState extends State<NearbyPage> {
                                       horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(6),
-                                    color: color.withOpacity(0.12),
+                                    color: color.withValues(alpha: 0.12),
                                   ),
                                   child: Text(
                                     type,

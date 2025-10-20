@@ -61,12 +61,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'lastname': lastname,
         });
 
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("✅ Account created successfully")),
         );
 
         Navigator.pop(context); // go back to Sign In
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("📩 Please check your email to confirm your account"),
@@ -74,10 +76,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
         );
       }
     } on AuthException catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("❌ ${e.message}")));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("❌ Unexpected error: $e")));

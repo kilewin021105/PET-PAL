@@ -1,22 +1,5 @@
 import 'package:flutter/material.dart';
 
-void main() {
-  runApp(PetPalApp());
-}
-
-class PetPalApp extends StatelessWidget {
-  const PetPalApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Pet Care Tips',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: ArticlesPage(),
-    );
-  }
-}
-
 class Article {
   final String title;
   final String description; // short summary

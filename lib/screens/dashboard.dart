@@ -1,34 +1,265 @@
 import 'package:flutter_application_1/InsideAcc/EditProfileTile.dart';
 
 import 'add_pet_dialog.dart';
+import 'pet_dialog.dart';
 import '../services/reminder_count_service.dart' as count_service;
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/SessionManager.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'healthOverview.dart';
 import 'package:flutter_application_1/main.dart' show MainScreen;
 import 'package:flutter_application_1/LoginForms/login.dart';
 import 'add_reminder_dialog.dart';
 import '../models/reminder.dart';
 import '../services/reminder_fetch_service.dart';
 
-// Stub pages (replace with your own implementations)
-class PetProfilePage extends StatelessWidget {
+// Pet Profile Page
+class PetProfilePage extends StatefulWidget {
   final Map<String, dynamic> pet;
   const PetProfilePage({super.key, required this.pet});
 
   @override
+  State<PetProfilePage> createState() => _PetProfilePageState();
+}
+
+class _PetProfilePageState extends State<PetProfilePage> {
+  final supabase = Supabase.instance.client;
+
+  late Map<String, dynamic> pet;
+
+  @override
+  void initState() {
+    super.initState();
+    pet = Map<String, dynamic>.from(widget.pet);
+    _refreshFromDb();
+  }
+
+  Future<void> _refreshFromDb() async {
+    if (pet['id'] == null) return;
+    try {
+      final data = await supabase
+          .from('pets')
+          .select()
+          .eq('id', pet['id'])
+          .single();
+      setState(() {
+        pet = Map<String, dynamic>.from(data);
+      });
+    } catch (_) {
+      // ignore errors; keep using passed-in pet data
+    }
+  }
+
+  Future<void> _promptAddPhoto() async {
+    final controller = TextEditingController(text: pet['photo_url'] ?? '');
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Set Photo URL'),
+          content: TextField(
+            controller: controller,
+            decoration: const InputDecoration(
+              hintText: 'https://example.com/pet.jpg',
+              labelText: 'Image URL',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, controller.text.trim()),
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null && result.isNotEmpty) {
+      setState(() {
+        pet['photo_url'] = result;
+      });
+      try {
+        await supabase
+            .from('pets')
+            .update({'photo_url': result})
+            .eq('id', pet['id']);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Photo updated')),
+          );
+        }
+      } catch (_) {
+        // If the column doesn't exist or update fails, just keep it in memory
+      }
+    }
+  }
+
+  Future<void> _editPet() async {
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (context) => PetDialog(pet: pet),
+    );
+    if (updated == true) {
+      await _refreshFromDb();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final String name = (pet['name'] ?? 'Pet').toString();
+    final String type = (pet['type'] ?? 'Unknown').toString();
+    final String species = (pet['species'] ?? 'Unknown').toString();
+    final String age = (pet['age']?.toString() ?? 'N/A').toString();
+    final String color = (pet['color'] ?? 'N/A').toString();
+    final String gender = (pet['gender'] ?? 'N/A').toString();
+    final String description =
+        (pet['description'] ?? 'No description').toString();
+    final String? photoUrl = pet['photo_url'] as String?;
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: Text("${pet['name']}'s Profile")),
-      body: Center(
-        child: Text(
-          "Type: ${pet['type']}\nAge: ${pet['age']}",
-          style: const TextStyle(fontSize: 18),
-          textAlign: TextAlign.center,
+      appBar: AppBar(
+        title: Text("$name's Profile"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            tooltip: 'Edit Pet',
+            onPressed: _editPet,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Center(
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 64,
+                    backgroundColor: Colors.grey.shade200,
+                    backgroundImage: (photoUrl != null && photoUrl.isNotEmpty)
+                        ? NetworkImage(photoUrl)
+                        : null,
+                    child: (photoUrl == null || photoUrl.isEmpty)
+                        ? const Icon(Icons.pets, size: 48, color: Colors.grey)
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Material(
+                      shape: const CircleBorder(),
+                      color: Colors.teal,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: _promptAddPhoto,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(Icons.camera_alt, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Center(
+              child: Text(
+                name,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                Chip(
+                  avatar: const Icon(Icons.category, size: 18),
+                  label: Text(type),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.pets, size: 18),
+                  label: Text(species),
+                ),
+                Chip(
+                  avatar: const Icon(Icons.cake_outlined, size: 18),
+                  label: Text("$age yrs"),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Card(
+              elevation: 0,
+              color: Theme.of(context).cardColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+                ),
+              ),
+              child: Column(
+                children: [
+                  _infoTile('Breed/Species', species, Icons.pets),
+                  const Divider(height: 1),
+                  _infoTile('Age', "$age years", Icons.cake_outlined),
+                  const Divider(height: 1),
+                  _infoTile('Color', color, Icons.color_lens_outlined),
+                  const Divider(height: 1),
+                  _infoTile('Gender', gender, Icons.male_outlined),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'About',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDark ? Colors.white10 : Colors.grey.shade200,
+                ),
+              ),
+              child: Text(
+                description,
+                style: const TextStyle(fontSize: 14),
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _infoTile(String title, String value, IconData icon) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.teal),
+      title: Text(title),
+      trailing: Text(
+        value,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+      contentPadding:
+          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     );
   }
 }
@@ -415,7 +646,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   context,
                                   MaterialPageRoute(
                                     builder: (context) =>
-                                        HealthOverviewPage(pet: pet),
+                                        PetProfilePage(pet: pet),
                                   ),
                                 );
                               },
@@ -642,7 +873,7 @@ class ReminderCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: badgeColor.withOpacity(0.15),
+              color: badgeColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
