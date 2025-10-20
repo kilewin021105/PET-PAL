@@ -1,3 +1,5 @@
+import 'package:flutter_application_1/InsideAcc/EditProfileTile.dart';
+
 import 'add_pet_dialog.dart';
 import '../services/reminder_count_service.dart' as count_service;
 import 'package:flutter/material.dart';
@@ -9,7 +11,6 @@ import 'package:flutter_application_1/LoginForms/login.dart';
 import 'add_reminder_dialog.dart';
 import '../models/reminder.dart';
 import '../services/reminder_fetch_service.dart';
-import 'pet_dialog.dart';
 
 // Pet Profile Page
 class PetProfilePage extends StatefulWidget {
@@ -475,22 +476,22 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
             ],
           ),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const AccountPage()),
-              );
-            },
-            child: const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12.0),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: Colors.teal,
-                child: Icon(Icons.person, color: Colors.white),
-              ),
-            ),
-          ),
+          // GestureDetector(
+          //   onTap: () {
+          //     Navigator.push(
+          //       context,
+          //       MaterialPageRoute(builder: (context) => const AccountPage()),
+          //     );
+          //   },
+          //   child: const Padding(
+          //     padding: EdgeInsets.symmetric(horizontal: 12.0),
+          //     child: CircleAvatar(
+          //       radius: 18,
+          //       backgroundColor: Colors.teal,
+          //       //child: Icon(Icons.person, color: Colors.white),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -734,8 +735,11 @@ class AccountPage extends StatelessWidget {
             title: const Text("Edit Profile"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Edit Profile tapped")),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfilePage(),
+                ),
               );
             },
           ),
