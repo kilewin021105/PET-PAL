@@ -84,6 +84,33 @@ class _SettingState extends State<SettingPage> {
           ),
 
           const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.red),
+            title: const Text("Logout"),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Confirm Logout"),
+                  content: const Text("Are you sure you want to logout?"),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text("Logout"),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                // Call your logout logic here
+              }
+            },
+          ),
         ],
       ),
     );

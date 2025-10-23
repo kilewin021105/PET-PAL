@@ -1,42 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-
-class EditProfileTile extends StatelessWidget {
-  const EditProfileTile({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final List<IconData> dogFaces = [
-      Icons.pets,
-      Icons.pets_outlined,
-      Icons.pets_rounded,
-    ];
-
-    return ListTile(
-      leading: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: dogFaces
-            .map(
-              (icon) => Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 2),
-                child: Icon(icon, color: Colors.teal),
-              ),
-            )
-            .toList(),
-      ),
-      title: const Text(
-        "Edit Profile",
-        style: TextStyle(fontWeight: FontWeight.w500),
-      ),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const EditProfilePage()),
-        );
-      },
-    );
-  }
-}
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -46,29 +13,58 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  int _selectedImageIndex = 0;
-
-  // Replace these with your actual image assets (add to assets folder + pubspec.yaml)
-  final List<String> dogImages = [
-    'assets/dog1.png',
-    'assets/dog2.png',
-    'assets/dog3.png',
-  ];
-
+  File? _imageFile;
+  final picker = ImagePicker();
   final nameController = TextEditingController();
   final emailController = TextEditingController();
 
-  void _changeImage() {
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imagePath = prefs.getString('profile_image');
+    final name = prefs.getString('profile_name') ?? '';
+    final email = prefs.getString('profile_email') ?? '';
+
+    if (imagePath != null && File(imagePath).existsSync()) {
+      setState(() => _imageFile = File(imagePath));
+    }
+
+    nameController.text = name;
+    emailController.text = email;
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile == null) return;
+
+    final directory = await getApplicationDocumentsDirectory();
+    final fileName = basename(pickedFile.path);
+    final savedImage = await File(
+      pickedFile.path,
+    ).copy('${directory.path}/$fileName');
+
     setState(() {
-      _selectedImageIndex =
-          (_selectedImageIndex + 1) % dogImages.length; // cycles images
+      _imageFile = savedImage;
     });
   }
 
-  void _saveProfile() {
+  Future<void> _saveProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_name', nameController.text);
+    await prefs.setString('profile_email', emailController.text);
+    if (_imageFile != null) {
+      await prefs.setString('profile_image', _imageFile!.path);
+    }
+
+    if (!mounted) return;
     ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text("Profile Updated ✅")));
+      context as BuildContext,
+    ).showSnackBar(const SnackBar(content: Text("Profile Saved ✅")));
   }
 
   @override
@@ -84,13 +80,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 children: [
                   CircleAvatar(
                     radius: 60,
-                    backgroundImage: AssetImage(dogImages[_selectedImageIndex]),
+                    backgroundColor: Colors.grey[300],
+                    child: ClipOval(
+                      child: _imageFile != null
+                          ? Image.file(
+                              _imageFile!,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            )
+                          : const Icon(
+                              Icons.person,
+                              size: 60,
+                              color: Colors.white,
+                            ),
+                    ),
                   ),
                   Positioned(
                     bottom: 0,
                     right: 0,
                     child: GestureDetector(
-                      onTap: _changeImage,
+                      onTap: _pickImage,
                       child: Container(
                         decoration: const BoxDecoration(
                           color: Colors.teal,
@@ -98,7 +108,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         padding: const EdgeInsets.all(8),
                         child: const Icon(
-                          Icons.swap_horiz,
+                          Icons.camera_alt,
                           color: Colors.white,
                           size: 20,
                         ),
