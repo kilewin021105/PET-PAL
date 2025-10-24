@@ -55,15 +55,7 @@ class _SignInScreenState extends State<SignInScreen> {
       appBar: AppBar(
         title: Text("PetPal", style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.blue,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(Icons.person, color: Colors.blue),
-            ),
-          ),
-        ],
+        actions: [Padding(padding: const EdgeInsets.all(8.0))],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

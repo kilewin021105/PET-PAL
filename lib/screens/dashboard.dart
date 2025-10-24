@@ -1,3 +1,5 @@
+import 'package:flutter_application_1/InsideAcc/HelpPage.dart';
+
 import '../InsideAcc/EditProfileTile.dart';
 import 'add_pet_dialog.dart';
 import '../services/reminder_count_service.dart' as count_service;
@@ -15,7 +17,6 @@ import '../InsideAcc/pet_profile_page.dart';
 // PetProfilePage class removed from this file.
 // Use PetProfileScreen in lib/InsideAcc/pet_profile_page.dart:
 // Navigator.push(context, MaterialPageRoute(builder: (_) => PetProfileScreen(pet: Map<String, dynamic>.from(pet))));
-
 
 class ManagePetPage extends StatelessWidget {
   final Map<String, dynamic> pet;
@@ -60,14 +61,19 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> _fetchPets() async {
     try {
       // Modern supabase-dart returns rows directly from select() (no .execute())
-      final res = await supabase.from('pets').select().order('id', ascending: true);
+      final res = await supabase
+          .from('pets')
+          .select()
+          .order('id', ascending: true);
       final data = (res as List<dynamic>?) ?? <dynamic>[];
       setState(() {
         pets = data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error loading pets: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error loading pets: $e')));
       }
     }
   }
@@ -165,9 +171,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                       );
                                     } else if (snapshot.hasError) {
                                       return Center(
-                                        child: Text(
-                                          'Error: ${snapshot.error}',
-                                        ),
+                                        child: Text('Error: ${snapshot.error}'),
                                       );
                                     } else if (!snapshot.hasData ||
                                         snapshot.data!.isEmpty) {
@@ -406,8 +410,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        PetProfileScreen(pet: Map<String, dynamic>.from(pet)),
+                                    builder: (context) => PetProfileScreen(
+                                      pet: Map<String, dynamic>.from(pet),
+                                    ),
                                   ),
                                 );
                               },
@@ -506,18 +511,17 @@ class AccountPage extends StatelessWidget {
             },
           ),
           ListTile(
-            leading: const Icon(
-              Icons.notifications_outlined,
-              color: Colors.teal,
-            ),
-            title: const Text("Notification Settings"),
+            leading: const Icon(Icons.help_outline, color: Colors.teal),
+            title: const Text("Help & Support"),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Notification Settings tapped")),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HelpPage()),
               );
             },
           ),
+
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
             title: const Text("Logout"),
