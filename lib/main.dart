@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/LoginForms/login.dart';
+import 'package:flutter_application_1/src/index.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_application_1/services/SessionManager.dart';
 import 'package:provider/provider.dart';
-import 'screens/petsPage.dart';
-import 'screens/dashboard.dart';
-// import 'screens/healthOverview.dart';
-import 'screens/nearby.dart';
-import 'screens/Articles.dart';
-import 'screens/settings.dart';
 
 Future<String?> getFullname() async {
   final supabase = Supabase.instance.client;

@@ -30,7 +30,7 @@ class _SettingState extends State<SettingPage> {
                   : Colors.teal,
             ),
             title: const Text("My Pets"),
-            subtitle: const Text("View and edit your pets’ info"),
+            subtitle: const Text("Pets settings"),
             onTap: () {
               // Navigate to pet profile page
             },

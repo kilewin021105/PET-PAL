@@ -1,9 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:path/path.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -13,10 +9,12 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  File? _imageFile;
-  final picker = ImagePicker();
+  final supabase = Supabase.instance.client;
+
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+
+  int _selectedIcon = Icons.person.codePoint;
 
   @override
   void initState() {
@@ -24,49 +22,105 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _loadProfile();
   }
 
+  // ----------------------------------
+  // LOAD PROFILE FROM SUPABASE
+  // ----------------------------------
   Future<void> _loadProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    final imagePath = prefs.getString('profile_image');
-    final name = prefs.getString('profile_name') ?? '';
-    final email = prefs.getString('profile_email') ?? '';
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
 
-    if (imagePath != null && File(imagePath).existsSync()) {
-      setState(() => _imageFile = File(imagePath));
+    try {
+      final response = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .single();
+
+      setState(() {
+        nameController.text = response['name'] ?? '';
+        emailController.text = response['email'] ?? '';
+        _selectedIcon = response['icon_code'] ?? Icons.person.codePoint;
+      });
+    } catch (e) {
+      debugPrint("Error loading profile: $e");
     }
-
-    nameController.text = name;
-    emailController.text = email;
   }
 
-  Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
-
-    final directory = await getApplicationDocumentsDirectory();
-    final fileName = basename(pickedFile.path);
-    final savedImage = await File(
-      pickedFile.path,
-    ).copy('${directory.path}/$fileName');
-
-    setState(() {
-      _imageFile = savedImage;
-    });
-  }
-
+  // ----------------------------------
+  // SAVE PROFILE TO SUPABASE
+  // ----------------------------------
   Future<void> _saveProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profile_name', nameController.text);
-    await prefs.setString('profile_email', emailController.text);
-    if (_imageFile != null) {
-      await prefs.setString('profile_image', _imageFile!.path);
-    }
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(
-      context as BuildContext,
-    ).showSnackBar(const SnackBar(content: Text("Profile Saved ✅")));
+    try {
+      await supabase.from('profiles').upsert({
+        'id': user.id,
+        'name': nameController.text,
+        'email': emailController.text,
+        'icon_code': _selectedIcon,
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile Saved to Supabase ✅")),
+      );
+    } catch (e) {
+      debugPrint("Error saving profile: $e");
+    }
   }
 
+  // ----------------------------------
+  // ICON PICKER DIALOG
+  // ----------------------------------
+  Future<void> _pickIcon() async {
+    final icons = [
+      Icons.person,
+      Icons.pets,
+      Icons.favorite,
+      Icons.star,
+      Icons.home,
+      Icons.face,
+      Icons.directions_walk,
+      Icons.directions_run,
+      Icons.gps_fixed,
+      Icons.catching_pokemon,
+      Icons.shield,
+      Icons.lock,
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Choose an Icon"),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: GridView.count(
+            crossAxisCount: 4,
+            shrinkWrap: true,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            children: icons.map((icon) {
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _selectedIcon = icon.codePoint;
+                  });
+                  Navigator.pop(context);
+                },
+                child: Icon(icon, size: 32),
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ----------------------------------
+  // UI
+  // ----------------------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,50 +129,25 @@ class _EditProfilePageState extends State<EditProfilePage> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
+            // Avatar Icon
             Center(
-              child: Stack(
-                children: [
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.grey[300],
-                    child: ClipOval(
-                      child: _imageFile != null
-                          ? Image.file(
-                              _imageFile!,
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                            )
-                          : const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.white,
-                            ),
-                    ),
+              child: GestureDetector(
+                onTap: _pickIcon,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.teal.shade100,
+                  child: Icon(
+                    IconData(_selectedIcon, fontFamily: 'MaterialIcons'),
+                    size: 50,
+                    color: Colors.teal.shade900,
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: _pickImage,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.teal,
-                          shape: BoxShape.circle,
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          color: Colors.white,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
+
             const SizedBox(height: 20),
+
+            // Name Field
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
@@ -126,7 +155,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 16),
+
+            // Email Field
             TextField(
               controller: emailController,
               decoration: const InputDecoration(
@@ -134,7 +166,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 24),
+
+            // SAVE BUTTON
             ElevatedButton.icon(
               onPressed: _saveProfile,
               icon: const Icon(Icons.save),
