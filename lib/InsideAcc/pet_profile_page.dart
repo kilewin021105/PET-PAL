@@ -1,6 +1,3 @@
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as p;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,6 +12,17 @@ class PetProfileScreen extends StatefulWidget {
 class _PetProfileScreenState extends State<PetProfileScreen> {
   final supabase = Supabase.instance.client;
   late Map<String, dynamic> pet;
+
+  // List of predefined avatar URLs
+  final List<String> avatarUrls = [
+    'https://via.placeholder.com/150/FF0000/FFFFFF?text=Dog1',
+    'https://via.placeholder.com/150/00FF00/FFFFFF?text=Dog2',
+    'https://via.placeholder.com/150/0000FF/FFFFFF?text=Cat1',
+    'https://via.placeholder.com/150/FFFF00/FFFFFF?text=Cat2',
+    'https://via.placeholder.com/150/FF00FF/FFFFFF?text=Bird1',
+    'https://via.placeholder.com/150/00FFFF/FFFFFF?text=Bird2',
+    // Add more as needed
+  ];
 
   @override
   void initState() {
@@ -46,41 +54,65 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
 
     // Get public URL (handle string or object shapes)
     final pub = await supabase.storage.from(bucket).getPublicUrl(remotePath);
-    if (pub == null) throw Exception('getPublicUrl returned null');
     if (pub is String) return pub;
-    return (pub as dynamic).publicURL ?? (pub as dynamic).publicUrl ?? '';
   }
 
   Future<void> _promptAddPhoto() async {
-    final XFile? picked = await ImagePicker().pickImage(source: ImageSource.gallery, imageQuality: 85);
-    if (picked == null) return;
+    final String? selectedAvatar = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Choose an Avatar'),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 300,
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: avatarUrls.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () => Navigator.of(context).pop(avatarUrls[index]),
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundImage: NetworkImage(avatarUrls[index]),
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
 
-    final file = File(picked.path);
-    final ext = p.extension(file.path);
-    final fileName = '${pet['id'] ?? 'unknown'}_${DateTime.now().millisecondsSinceEpoch}$ext';
-    // use the exact bucket id from your Supabase project (no spaces/apostrophes)
-    const bucket = 'pet-pictures';
+    if (selectedAvatar == null) return;
 
     try {
-      final url = await _uploadFileToStorage(file, bucket, fileName);
-      if (url.isEmpty) throw Exception('Could not get public URL after upload');
-
-      // Update DB: try maybeSingle(); if not available handle list fallback
+      // Update DB with selected avatar URL
       dynamic updated;
       try {
-        updated = await supabase.from('pets').update({'photo_url': url}).eq('id', pet['id']).select().maybeSingle();
+        updated = await supabase.from('pets').update({'photo_url': selectedAvatar}).eq('id', pet['id']).select().maybeSingle();
       } catch (_) {
         // maybeSingle() not available -> select() returns List
-        final res = await supabase.from('pets').update({'photo_url': url}).eq('id', pet['id']).select();
+        final res = await supabase.from('pets').update({'photo_url': selectedAvatar}).eq('id', pet['id']).select();
         if (res == null || (res is List && res.isEmpty)) throw Exception('Update returned empty');
         updated = (res is List) ? res.first : res;
       }
 
       if (updated == null) throw Exception('Update failed');
       setState(() => pet = Map<String, dynamic>.from(updated as Map<String, dynamic>));
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Photo uploaded')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar updated')));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
     }
   }
 

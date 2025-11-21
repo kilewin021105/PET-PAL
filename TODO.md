@@ -1,8 +1,5 @@
-- [x] Update _loadPets to select all fields (no change needed as select() gets all)
-- [x] Update _addPet dialog to include description, breed, color, gender fields
-- [x] Add _editPet method with pre-filled dialog and update functionality
-- [x] Change ListView to use Cards for better display of pet information
-- [x] Add edit button alongside delete in each pet card
-- [x] Fix Android build error by enabling core library desugaring and updating desugar_jdk_libs version
-- [ ] Test add, edit, delete with new fields
-- [ ] Ensure Supabase table schema includes new columns (description, breed, color, gender)
+# TODO for Changing Pet Picture Edit to Avatars
+
+- [x] Define a list of predefined avatar URLs in the _PetProfileScreenState class.
+- [x] Modify the _promptAddPhoto method to display an AlertDialog with a GridView of avatar images instead of opening the gallery.
+- [x] Handle avatar selection: update the pet's photo_url in the database and refresh the UI.
