@@ -362,11 +362,16 @@ class _DashboardPageState extends State<DashboardPage> {
                             CircleAvatar(
                               radius: 28,
                               backgroundColor: Colors.grey[200],
-                              child: const Icon(
-                                Icons.pets,
-                                color: Colors.grey,
-                                size: 32,
-                              ),
+                              backgroundImage: (pet['photo_url'] != null && (pet['photo_url'] as String).isNotEmpty)
+                                  ? NetworkImage(pet['photo_url'])
+                                  : null,
+                              child: (pet['photo_url'] == null || (pet['photo_url'] as String).isEmpty)
+                                  ? const Icon(
+                                      Icons.pets,
+                                      color: Colors.grey,
+                                      size: 32,
+                                    )
+                                  : null,
                             ),
                             const SizedBox(width: 16),
                             Expanded(

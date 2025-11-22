@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'upload_picture_page.dart';
 
 class PetProfileScreen extends StatefulWidget {
   final Map<String, dynamic> pet;
@@ -12,17 +13,10 @@ class PetProfileScreen extends StatefulWidget {
 class _PetProfileScreenState extends State<PetProfileScreen> {
   final supabase = Supabase.instance.client;
   late Map<String, dynamic> pet;
+  
 
-  // List of predefined avatar URLs
-  final List<String> avatarUrls = [
-    'https://via.placeholder.com/150/FF0000/FFFFFF?text=Dog1',
-    'https://via.placeholder.com/150/00FF00/FFFFFF?text=Dog2',
-    'https://via.placeholder.com/150/0000FF/FFFFFF?text=Cat1',
-    'https://via.placeholder.com/150/FFFF00/FFFFFF?text=Cat2',
-    'https://via.placeholder.com/150/FF00FF/FFFFFF?text=Bird1',
-    'https://via.placeholder.com/150/00FFFF/FFFFFF?text=Bird2',
-    // Add more as needed
-  ];
+  // Preset avatars removed: only gallery upload is supported
+  final List<String> avatarUrls = const [];
 
   @override
   void initState() {
@@ -34,92 +28,55 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
   Future<void> _refreshFromDb() async {
     if (pet['id'] == null) return;
     try {
-      // For supabase-dart >= 1.0 use maybeSingle()/single()
       final row = await supabase.from('pets').select().eq('id', pet['id']).maybeSingle();
       if (row == null) return;
-      setState(() => pet = Map<String, dynamic>.from(row as Map<String, dynamic>));
+      setState(() => pet = Map<String, dynamic>.from(row));
     } catch (_) {
       // keep passed-in pet on error
     }
   }
 
-  // Simplified, compatible upload helper (use File upload only)
-  Future<String> _uploadFileToStorage(File file, String bucket, String remotePath) async {
-    try {
-      // Upload File object (widely supported by supabase_flutter v2.x)
-      await supabase.storage.from(bucket).upload(remotePath, file, fileOptions: const FileOptions(upsert: true));
-    } catch (e) {
-      throw Exception('Upload failed: $e');
-    }
+  
 
-    // Get public URL (handle string or object shapes)
-    final pub = await supabase.storage.from(bucket).getPublicUrl(remotePath);
-    if (pub is String) return pub;
-  }
+  // Image picking/upload flow moved to UploadPicturePage. _uploadImageToStorage and
+  // _updatePetPhotoUrl are kept here for compatibility if needed elsewhere.
 
-  Future<void> _promptAddPhoto() async {
-    final String? selectedAvatar = await showDialog<String>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Choose an Avatar'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 300,
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-              ),
-              itemCount: avatarUrls.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () => Navigator.of(context).pop(avatarUrls[index]),
-                  child: CircleAvatar(
-                    radius: 40,
-                    backgroundImage: NetworkImage(avatarUrls[index]),
-                  ),
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (selectedAvatar == null) return;
+  Future<void> _updatePetPhotoUrl(String photoUrl) async {
+    final List<String> candidates = [
+      'photo_url',
+      'photo',
+      'avatar',
+      'avatar_url',
+      'image_url',
+      'image',
+      'photoUrl',
+      'url',
+    ];
+    String column = candidates.firstWhere((k) => pet.containsKey(k), orElse: () => 'photo_url');
+    final updatePayload = <String, dynamic>{column: photoUrl};
 
     try {
-      // Update DB with selected avatar URL
       dynamic updated;
       try {
-        updated = await supabase.from('pets').update({'photo_url': selectedAvatar}).eq('id', pet['id']).select().maybeSingle();
-      } catch (_) {
-        // maybeSingle() not available -> select() returns List
-        final res = await supabase.from('pets').update({'photo_url': selectedAvatar}).eq('id', pet['id']).select();
-        if (res == null || (res is List && res.isEmpty)) throw Exception('Update returned empty');
-        updated = (res is List) ? res.first : res;
+        updated = await supabase.from('pets').update(updatePayload).eq('id', pet['id']).select().maybeSingle();
+      } catch (inner) {
+        final res = await supabase.from('pets').update(updatePayload).eq('id', pet['id']).select();
+        if ((res as List).isEmpty) throw Exception('Update returned empty');
+        updated = (res as List).first;
       }
 
       if (updated == null) throw Exception('Update failed');
       setState(() => pet = Map<String, dynamic>.from(updated as Map<String, dynamic>));
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Avatar updated')));
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $e')));
+      final msg = e.toString();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Update failed: $msg')));
     }
   }
 
+  // Navigation now goes to a dedicated UploadPicturePage; _pickAndUploadImage remains
+
   Future<void> _editPet() async {
-    // if you have a PetDialog in your project, replace the following with the dialog call:
-    // final updated = await showDialog<bool>(context: context, builder: (_) => PetDialog(pet: pet));
-    // if (updated == true) await _refreshFromDb();
     // Placeholder: refresh from db directly
     await _refreshFromDb();
   }
@@ -174,7 +131,13 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                   color: Colors.teal,
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: _promptAddPhoto,
+                    onTap: () async {
+                      // Navigate to a dedicated upload page; when it returns a URL, update the pet
+                      final result = await Navigator.of(context).push<String?>(
+                        MaterialPageRoute(builder: (_) => UploadPicturePage(pet: pet)),
+                      );
+                      if (result != null) await _updatePetPhotoUrl(result);
+                    },
                     child: const Padding(padding: EdgeInsets.all(10), child: Icon(Icons.camera_alt, color: Colors.white)),
                   ),
                 ),

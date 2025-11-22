@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -13,8 +16,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   final nameController = TextEditingController();
   final emailController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
-  int _selectedIcon = Icons.person.codePoint;
+  String? _avatarUrl; // public URL to the profile picture
 
   @override
   void initState() {
@@ -34,12 +38,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
           .from('profiles')
           .select()
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+
+      if (!mounted || response == null) return;
 
       setState(() {
-        nameController.text = response['name'] ?? '';
-        emailController.text = response['email'] ?? '';
-        _selectedIcon = response['icon_code'] ?? Icons.person.codePoint;
+        nameController.text = (response['name'] ?? response['fullname'] ?? '').toString();
+        emailController.text = (response['email'] ?? '').toString();
+        // Try common keys for avatar url
+        _avatarUrl = (response['avatar_url'] ?? response['photo_url'] ?? response['image_url'] ?? '').toString();
+        if (_avatarUrl != null && _avatarUrl!.isEmpty) _avatarUrl = null;
       });
     } catch (e) {
       debugPrint("Error loading profile: $e");
@@ -58,7 +66,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'id': user.id,
         'name': nameController.text,
         'email': emailController.text,
-        'icon_code': _selectedIcon,
+        'avatar_url': _avatarUrl,
       });
 
       if (!mounted) return;
@@ -72,50 +80,42 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   // ----------------------------------
-  // ICON PICKER DIALOG
+  // PICK & UPLOAD PROFILE PHOTO
   // ----------------------------------
-  Future<void> _pickIcon() async {
-    final icons = [
-      Icons.person,
-      Icons.pets,
-      Icons.favorite,
-      Icons.star,
-      Icons.home,
-      Icons.face,
-      Icons.directions_walk,
-      Icons.directions_run,
-      Icons.gps_fixed,
-      Icons.catching_pokemon,
-      Icons.shield,
-      Icons.lock,
-    ];
+  Future<void> _pickAndUploadProfilePhoto() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
 
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Choose an Icon"),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: GridView.count(
-            crossAxisCount: 4,
-            shrinkWrap: true,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            children: icons.map((icon) {
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedIcon = icon.codePoint;
-                  });
-                  Navigator.pop(context);
-                },
-                child: Icon(icon, size: 32),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
-    );
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+
+    final File file = File(image.path);
+    final String fileName = 'user_${user.id}_${DateTime.now().millisecondsSinceEpoch}.png';
+    final String storagePath = 'public/$fileName';
+
+    try {
+      // Upload to the 'profile-pictures' bucket
+      await supabase.storage.from('profile-pictures').upload(storagePath, file);
+      final String publicUrl = supabase.storage.from('profile-pictures').getPublicUrl(storagePath);
+
+      // Update state and persist to profile row
+      setState(() => _avatarUrl = publicUrl);
+
+      try {
+        await supabase.from('profiles').update({'avatar_url': publicUrl}).eq('id', user.id);
+      } catch (_) {
+        // Fallback to upsert just in case the row doesn't exist yet
+        await supabase.from('profiles').upsert({'id': user.id, 'avatar_url': publicUrl});
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile photo updated')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      }
+    }
   }
 
   // ----------------------------------
@@ -123,24 +123,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // ----------------------------------
   @override
   Widget build(BuildContext context) {
+    final bool hasAvatar = _avatarUrl != null && _avatarUrl!.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(title: const Text("Edit Profile")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // Avatar Icon
+            // Avatar Photo (tap to upload)
             Center(
               child: GestureDetector(
-                onTap: _pickIcon,
+                onTap: _pickAndUploadProfilePhoto,
                 child: CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.teal.shade100,
-                  child: Icon(
-                    IconData(_selectedIcon, fontFamily: 'MaterialIcons'),
-                    size: 50,
-                    color: Colors.teal.shade900,
-                  ),
+                  backgroundImage: hasAvatar ? NetworkImage(_avatarUrl!) : null,
+                  child: hasAvatar
+                      ? null
+                      : Icon(
+                          Icons.person,
+                          size: 50,
+                          color: Colors.teal.shade900,
+                        ),
                 ),
               ),
             ),

@@ -80,29 +80,41 @@ class _PetsPageState extends State<PetsPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            const Icon(Icons.pets, color: Colors.teal),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                pet['name'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                            Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: Colors.grey[200],
+                                  backgroundImage: (pet['photo_url'] != null && (pet['photo_url'] as String).isNotEmpty)
+                                      ? NetworkImage(pet['photo_url'])
+                                      : null,
+                                  child: (pet['photo_url'] == null || (pet['photo_url'] as String).isEmpty)
+                                      ? const Icon(
+                                          Icons.pets,
+                                          color: Colors.grey,
+                                        )
+                                      : null,
                                 ),
-                              ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    pet['name'] ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _editPet(pet),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  onPressed: () => _deletePet(pet['id']),
+                                ),
+                              ],
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _editPet(pet),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _deletePet(pet['id']),
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 8),
                         Text(
                           "${pet['type'] ?? ''} • ${pet['species'] ?? ''} • Age: ${pet['age'] ?? ''} • ${pet['color'] ?? ''} • ${pet['gender'] ?? ''}",
