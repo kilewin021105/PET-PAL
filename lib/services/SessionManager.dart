@@ -9,6 +9,7 @@ class SessionManager extends ChangeNotifier {
     _user = null;
     _firstName = null;
     _lastName = null;
+    _avatarUrl = null;
     notifyListeners(); // Notify UI of changes
   }
 
@@ -19,11 +20,13 @@ class SessionManager extends ChangeNotifier {
   User? _user;
   String? _firstName;
   String? _lastName;
+  String? _avatarUrl;
 
   // Public getters for user and profile info
   User? get user => _user;
   String? get firstName => _firstName;
   String? get lastName => _lastName;
+  String? get avatarUrl => _avatarUrl;
   String? get fullname => (_firstName != null && _lastName != null)
       ? '$_firstName $_lastName'
       : null;
@@ -58,12 +61,24 @@ class SessionManager extends ChangeNotifier {
     if (_user == null) return;
     final response = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, avatar_url, photo_url, image_url')
         .eq('id', _user!.id)
         .maybeSingle();
 
     _firstName = response?['first_name'] as String?;
     _lastName = response?['last_name'] as String?;
+    final dynamic a = response?['avatar_url'] ?? response?['photo_url'] ?? response?['image_url'];
+    _avatarUrl = (a is String && a.isNotEmpty) ? a : null;
     notifyListeners(); // Update UI with new profile info
+  }
+
+  // Update avatar in Supabase and notify listeners
+  Future<void> setAvatarUrl(String? url) async {
+    _avatarUrl = url;
+    notifyListeners();
+    if (_user == null) return;
+    try {
+      await supabase.from('profiles').upsert({'id': _user!.id, 'avatar_url': url});
+    } catch (_) {}
   }
 }

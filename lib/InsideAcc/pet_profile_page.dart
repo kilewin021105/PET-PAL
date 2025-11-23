@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'upload_picture_page.dart';
+//import 'upload_picture_page.dart';
 
 class PetProfileScreen extends StatefulWidget {
   final Map<String, dynamic> pet;
@@ -131,13 +133,27 @@ class _PetProfileScreenState extends State<PetProfileScreen> {
                   color: Colors.teal,
                   child: InkWell(
                     customBorder: const CircleBorder(),
-                    onTap: () async {
-                      // Navigate to a dedicated upload page; when it returns a URL, update the pet
-                      final result = await Navigator.of(context).push<String?>(
-                        MaterialPageRoute(builder: (_) => UploadPicturePage(pet: pet)),
-                      );
-                      if (result != null) await _updatePetPhotoUrl(result);
-                    },
+                  onTap: () async {
+                    final picker = ImagePicker();
+                    final XFile? img = await picker.pickImage(source: ImageSource.gallery);
+                    if (img == null) return;
+
+                    final file = File(img.path);
+
+                    try {
+                      final petId = pet['id'] ?? 'unknown';
+                      final timestamp = DateTime.now().millisecondsSinceEpoch;
+                      final String fileName = 'pet_${petId}_$timestamp.png';
+                      final String path = 'public/$fileName';
+
+                      await supabase.storage.from('pets_profile').upload(path, file);
+                      final publicUrl = supabase.storage.from('pets_profile').getPublicUrl(path);
+
+                      await _updatePetPhotoUrl(publicUrl);
+                    } catch (e) {
+                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+                    }
+                  },
                     child: const Padding(padding: EdgeInsets.all(10), child: Icon(Icons.camera_alt, color: Colors.white)),
                   ),
                 ),

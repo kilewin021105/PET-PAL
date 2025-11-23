@@ -278,14 +278,23 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                   },
-                  child: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.teal[100],
-                    child: const Icon(
-                      Icons.person,
-                      color: Colors.teal,
-                      size: 32,
-                    ),
+                  child: Consumer<SessionManager>(
+                    builder: (context, session, _) {
+                      final url = session.avatarUrl;
+                      final hasAvatar = url != null && url.isNotEmpty;
+                      return CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Colors.teal[100],
+                        backgroundImage: hasAvatar ? NetworkImage(url!) : null,
+                        child: hasAvatar
+                            ? null
+                            : const Icon(
+                                Icons.person,
+                                color: Colors.teal,
+                                size: 32,
+                              ),
+                      );
+                    },
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -480,10 +489,19 @@ class AccountPage extends StatelessWidget {
           Center(
             child: Column(
               children: [
-                const CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Colors.teal,
-                  child: Icon(Icons.person, size: 40, color: Colors.white),
+                Consumer<SessionManager>(
+                  builder: (context, session, _) {
+                    final url = session.avatarUrl;
+                    final hasAvatar = url != null && url.isNotEmpty;
+                    return CircleAvatar(
+                      radius: 40,
+                      backgroundColor: Colors.teal,
+                      backgroundImage: hasAvatar ? NetworkImage(url!) : null,
+                      child: hasAvatar
+                          ? null
+                          : const Icon(Icons.person, size: 40, color: Colors.white),
+                    );
+                  },
                 ),
                 const SizedBox(height: 10),
                 Text(

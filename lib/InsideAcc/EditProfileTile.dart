@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+import '../services/SessionManager.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -101,14 +103,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
       // Update state and persist to profile row
       setState(() => _avatarUrl = publicUrl);
 
-      try {
-        await supabase.from('profiles').update({'avatar_url': publicUrl}).eq('id', user.id);
-      } catch (_) {
-        // Fallback to upsert just in case the row doesn't exist yet
-        await supabase.from('profiles').upsert({'id': user.id, 'avatar_url': publicUrl});
+      final user = supabase.auth.currentUser;
+      if (user != null) {
+        final userId = user.id;
+        try {
+          await supabase
+              .from('profiles')
+              .update({'avatar_url': publicUrl}) // or 'imageUrl'
+              .eq('id', userId);
+        } catch (e) {
+          // fallback or upsert if you prefer
+          await supabase.from('profiles').upsert({'id': userId, 'avatar_url': publicUrl});
+        }
       }
 
+      // Update central session state so all listeners refresh
       if (mounted) {
+        context.read<SessionManager>().setAvatarUrl(publicUrl);
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile photo updated')));
       }
     } catch (e) {
@@ -123,7 +134,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   // ----------------------------------
   @override
   Widget build(BuildContext context) {
-    final bool hasAvatar = _avatarUrl != null && _avatarUrl!.isNotEmpty;
+    final session = context.watch<SessionManager>();
+    final effectiveUrl = _avatarUrl ?? session.avatarUrl;
+    final bool hasAvatar = effectiveUrl != null && effectiveUrl.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Edit Profile")),
@@ -138,7 +151,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 child: CircleAvatar(
                   radius: 50,
                   backgroundColor: Colors.teal.shade100,
-                  backgroundImage: hasAvatar ? NetworkImage(_avatarUrl!) : null,
+                  backgroundImage: hasAvatar ? NetworkImage(effectiveUrl!) : null,
                   child: hasAvatar
                       ? null
                       : Icon(
