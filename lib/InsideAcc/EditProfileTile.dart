@@ -73,6 +73,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       if (!mounted) return;
 
+      // Update global session so Dashboard reflects changes immediately
+      context.read<SessionManager>().setFullName(nameController.text);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Profile Saved to Supabase ✅")),
       );

@@ -188,10 +188,6 @@ class _DashboardPageState extends State<DashboardPage> {
                                       itemBuilder: (context, i) {
                                         final r = reminders[i];
                                         return ListTile(
-                                          leading: const Icon(
-                                            Icons.notifications_active,
-                                            color: Colors.teal,
-                                          ),
                                           title: Text(r.title),
                                           subtitle: Text(r.description),
                                           trailing: Text(
@@ -204,8 +200,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                         );
                                       },
                                     );
-                                  },
-                                ),
+                    }
+                  ),
                               ),
                             ],
                           );
@@ -242,23 +238,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
             ],
           ),
-          // GestureDetector(
-          //   onTap: () {
-          //     Navigator.push(
-          //       context,
-          //       MaterialPageRoute(builder: (context) => const AccountPage()),
-          //     );
-          //   },
-          //   child: const Padding(
-          //     padding: EdgeInsets.symmetric(horizontal: 12.0),
-          //     child: CircleAvatar(
-          //       radius: 18,
-          //       backgroundColor: Colors.teal,
-          //       //child: Icon(Icons.person, color: Colors.white),
-          //     ),
-          //   ),
-          // ),
-        ],
+                  ],
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
@@ -278,14 +258,15 @@ class _DashboardPageState extends State<DashboardPage> {
                       ),
                     );
                   },
-                  child: Consumer<SessionManager>(
-                    builder: (context, session, _) {
+                  child: Builder(
+                    builder: (context) {
+                      final session = Provider.of<SessionManager>(context);
                       final url = session.avatarUrl;
                       final hasAvatar = url != null && url.isNotEmpty;
                       return CircleAvatar(
                         radius: 28,
                         backgroundColor: Colors.teal[100],
-                        backgroundImage: hasAvatar ? NetworkImage(url!) : null,
+                        backgroundImage: hasAvatar ? NetworkImage(url) : null,
                         child: hasAvatar
                             ? null
                             : const Icon(
@@ -294,7 +275,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 size: 32,
                               ),
                       );
-                    },
+                    }
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -496,7 +477,7 @@ class AccountPage extends StatelessWidget {
                     return CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.teal,
-                      backgroundImage: hasAvatar ? NetworkImage(url!) : null,
+                      backgroundImage: hasAvatar ? NetworkImage(url) : null,
                       child: hasAvatar
                           ? null
                           : const Icon(Icons.person, size: 40, color: Colors.white),
