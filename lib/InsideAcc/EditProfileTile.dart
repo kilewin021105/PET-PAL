@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import '../services/SessionManager.dart';
+import '../LoginForms/login.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -16,7 +17,8 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final supabase = Supabase.instance.client;
 
-  final nameController = TextEditingController();
+  final firstNameController = TextEditingController();
+  final lastNameController = TextEditingController();
   final emailController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
 
@@ -45,7 +47,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (!mounted || response == null) return;
 
       setState(() {
-        nameController.text = (response['name'] ?? response['fullname'] ?? '').toString();
+        firstNameController.text = (response['first_name'] ?? '').toString();
+        lastNameController.text = (response['last_name'] ?? '').toString();
         emailController.text = (response['email'] ?? '').toString();
         // Try common keys for avatar url
         _avatarUrl = (response['avatar_url'] ?? response['photo_url'] ?? response['image_url'] ?? '').toString();
@@ -63,24 +66,72 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final user = supabase.auth.currentUser;
     if (user == null) return;
 
+    // Validate email format
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+    if (!emailRegex.hasMatch(emailController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter a valid email address.")),
+      );
+      return;
+    }
+
+    // Check email uniqueness
     try {
+      final existingUser = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', emailController.text)
+          .neq('id', user.id)
+          .maybeSingle();
+      if (existingUser != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("This email is already in use.")),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint("Error checking email uniqueness: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error validating email. Please try again.")),
+      );
+      return;
+    }
+
+    try {
+      // Update email in auth and profiles
+      await context.read<SessionManager>().updateEmail(emailController.text);
+
+      // Update other profile fields
       await supabase.from('profiles').upsert({
         'id': user.id,
-        'name': nameController.text,
-        'email': emailController.text,
+        'first_name': firstNameController.text,
+        'last_name': lastNameController.text,
         'avatar_url': _avatarUrl,
       });
 
       if (!mounted) return;
 
       // Update global session so Dashboard reflects changes immediately
-      context.read<SessionManager>().setFullName(nameController.text);
+      final fullName = '${firstNameController.text} ${lastNameController.text}'.trim();
+      context.read<SessionManager>().setFullName(fullName);
+
+      // Sign out the user to force login with new email
+      await context.read<SessionManager>().signOut();
+
+      // Navigate to login screen
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const SignInScreen()),
+        (route) => false,
+      );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Profile Saved to Supabase ✅")),
+        const SnackBar(content: Text("Email updated. Please log in with your new email. If email confirmation is required, check your email for the confirmation link.")),
       );
     } catch (e) {
       debugPrint("Error saving profile: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Error saving profile. Please try again.")),
+      );
     }
   }
 
@@ -149,30 +200,58 @@ class _EditProfilePageState extends State<EditProfilePage> {
           children: [
             // Avatar Photo (tap to upload)
             Center(
-              child: GestureDetector(
-                onTap: _pickAndUploadProfilePhoto,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.teal.shade100,
-                  backgroundImage: hasAvatar ? NetworkImage(effectiveUrl!) : null,
-                  child: hasAvatar
-                      ? null
-                      : Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.teal.shade900,
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 64,
+                    backgroundColor: Colors.teal.shade100,
+                    backgroundImage: hasAvatar ? NetworkImage(effectiveUrl) : null,
+                    child: hasAvatar
+                        ? null
+                        : Icon(
+                            Icons.person,
+                            size: 64,
+                            color: Colors.teal.shade900,
+                          ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: Material(
+                      shape: const CircleBorder(),
+                      color: Colors.teal,
+                      child: InkWell(
+                        customBorder: const CircleBorder(),
+                        onTap: _pickAndUploadProfilePhoto,
+                        child: const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: Icon(Icons.camera_alt, color: Colors.white),
                         ),
-                ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 20),
 
-            // Name Field
+            // First Name Field
             TextField(
-              controller: nameController,
+              controller: firstNameController,
               decoration: const InputDecoration(
-                labelText: "Name",
+                labelText: "First Name",
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Last Name Field
+            TextField(
+              controller: lastNameController,
+              decoration: const InputDecoration(
+                labelText: "Last Name",
                 border: OutlineInputBorder(),
               ),
             ),

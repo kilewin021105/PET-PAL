@@ -1,5 +1,6 @@
-# TODO for Changing Pet Picture Edit to Avatars
+# TODO: Adjust Logo Size and Screen Layout in Login Form
 
-- [x] Define a list of predefined avatar URLs in the _PetProfileScreenState class.
-- [x] Modify the _promptAddPhoto method to display an AlertDialog with a GridView of avatar images instead of opening the gallery.
-- [x] Handle avatar selection: update the pet's photo_url in the database and refresh the UI.
+- [x] Resize the logo (Image.asset('assets/PETPAL.png')) to smaller dimensions (e.g., width: 100, height: 100) to make it less prominent.
+- [x] Move logo to app bar in login screen.
+- [x] Reorder login form: logo, Sign In button, email field, password field.
+- [ ] Wrap the body content in SingleChildScrollView to allow scrolling and prevent overflow warnings when the keyboard appears during typing.

@@ -264,8 +264,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       final url = session.avatarUrl;
                       final hasAvatar = url != null && url.isNotEmpty;
                       return CircleAvatar(
-                        radius: 28,
-                        backgroundColor: Colors.teal[100],
+                        radius: 30,
+                        backgroundColor: hasAvatar ? null : Colors.teal[100],
                         backgroundImage: hasAvatar ? NetworkImage(url) : null,
                         child: hasAvatar
                             ? null
@@ -475,8 +475,8 @@ class AccountPage extends StatelessWidget {
                     final url = session.avatarUrl;
                     final hasAvatar = url != null && url.isNotEmpty;
                     return CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Colors.teal,
+                      radius: 30,
+                      backgroundColor: hasAvatar ? null : Colors.teal,
                       backgroundImage: hasAvatar ? NetworkImage(url) : null,
                       child: hasAvatar
                           ? null
