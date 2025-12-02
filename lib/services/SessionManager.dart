@@ -42,13 +42,16 @@ class SessionManager extends ChangeNotifier {
   // Constructor: sets up auth state listener and loads current user
   SessionManager() {
     // Listen for authentication state changes
-    supabase.auth.onAuthStateChange.listen((data) {
+    supabase.auth.onAuthStateChange.listen((data) async {
       final event = data.event;
       final session = data.session;
 
       if (event == AuthChangeEvent.signedIn) {
         _user = session?.user; // Set user on sign in
-        _fetchProfile(); // Fetch profile info
+        // Load saved profile immediately for instant UI update
+        await _loadProfileFromPrefs();
+        // Then fetch latest from Supabase in background
+        _fetchProfile();
       } else if (event == AuthChangeEvent.signedOut) {
         _user = null;
         _firstName = null;

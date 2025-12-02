@@ -1,6 +1,14 @@
-# TODO: Adjust Logo Size and Screen Layout in Login Form
+# TODO
 
-- [x] Resize the logo (Image.asset('assets/PETPAL.png')) to smaller dimensions (e.g., width: 100, height: 100) to make it less prominent.
-- [x] Move logo to app bar in login screen.
-- [x] Reorder login form: logo, Sign In button, email field, password field.
-- [ ] Wrap the body content in SingleChildScrollView to allow scrolling and prevent overflow warnings when the keyboard appears during typing.
+## Completed
+- [x] Fix reschedule button by properly handling notification IDs
+  - Use reminder ID as notification ID
+  - Cancel old notification before scheduling new one for updates
+  - For new reminders, get the inserted ID and use it for notification
+- [x] Add pet_id to Reminder model toJson() method
+- [x] Handle ID parsing in notification scheduling
+- [x] Add error handling to reschedule button onPressed
+
+## Pending
+- [ ] Test the reschedule functionality
+- [ ] Consider adding notification cancellation when marking reminders as completed or missed

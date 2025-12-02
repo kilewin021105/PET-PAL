@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/src/index.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_application_1/services/notification_service.dart';
+import 'screens/dashboard.dart';
+import 'screens/petsPage.dart';
+import 'screens/nearby.dart';
+import 'screens/Articles.dart';
+import 'screens/settings.dart';
+import 'LoginForms/login.dart';
+import 'services/SessionManager.dart';
+import 'firebase_options.dart';
 
 Future<String?> getFullname() async {
   final supabase = Supabase.instance.client;
@@ -22,11 +31,20 @@ Future<String?> getFullname() async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   await Supabase.initialize(
     url: 'https://xfmusoxrdhuzmaxffwyq.supabase.co',
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmbXVzb3hyZGh1em1heGZmd3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcwNzYyNzcsImV4cCI6MjA3MjY1MjI3N30.-VQ7z2fDpHnzBTgO1b9AhxzLwNRyO6fmzmoiM59a1Dk',
   );
+
+  // Initialize notifications
+  await NotificationService.initialize();
 
   runApp(
     ChangeNotifierProvider(

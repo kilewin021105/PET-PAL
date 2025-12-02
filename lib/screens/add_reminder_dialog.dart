@@ -1,9 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
+import '../services/notification_service.dart';
 
 class AddReminderDialog extends StatefulWidget {
   final Map<String, dynamic>? reminder;
@@ -25,15 +23,9 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
   String? _selectedPetId;
   List<Map<String, dynamic>> _pets = [];
 
-  late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-
   @override
   void initState() {
     super.initState();
-    tz.initializeTimeZones();
-    tz.setLocalLocation(tz.getLocation('Asia/Manila'));
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    _initializeNotifications();
     _fetchPets();
 
     _titleController = TextEditingController(
@@ -61,59 +53,28 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
     super.dispose();
   }
 
-  Future<void> _initializeNotifications() async {
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
-    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-  }
-
   Future<void> _fetchPets() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     if (userId == null) return;
 
-    final response = await Supabase.instance.client
-        .from('pets')
-        .select('id, name')
-        .eq('user_id', userId);
+    try {
+      final response = await Supabase.instance.client
+          .from('pets')
+          .select('id, name')
+          .eq('user_id', userId);
 
-    setState(() {
-      _pets = List<Map<String, dynamic>>.from(response);
-    });
+      setState(() {
+        _pets = List<Map<String, dynamic>>.from(response);
+      });
+    } catch (e) {
+      // Handle error silently or show a message if needed
+      setState(() {
+        _pets = [];
+      });
+    }
   }
 
-  Future<void> _scheduleNotification(
-    DateTime scheduledDate,
-    String title,
-    String body,
-  ) async {
-    const AndroidNotificationDetails androidPlatformChannelSpecifics =
-        AndroidNotificationDetails(
-          'reminder_channel',
-          'Reminders',
-          channelDescription: 'Channel for reminder notifications',
-          importance: Importance.max,
-          priority: Priority.high,
-          ticker: 'ticker',
-        );
-    const NotificationDetails platformChannelSpecifics = NotificationDetails(
-      android: androidPlatformChannelSpecifics,
-    );
-    final tz.TZDateTime tzScheduledDate = tz.TZDateTime.from(
-      scheduledDate,
-      tz.local,
-    );
-    await flutterLocalNotificationsPlugin.zonedSchedule(
-      Random().nextInt(100000), // unique ID
-      title,
-      body,
-      tzScheduledDate,
-      platformChannelSpecifics,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dateAndTime,
-    );
-  }
+
 
   Future<void> _pickDate() async {
     final now = DateTime.now();
@@ -172,9 +133,14 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
       'date_time': dateTime.toIso8601String(),
       'user_id': Supabase.instance.client.auth.currentUser?.id,
       'pet_id': _selectedPetId,
+      'status': 'pending',
     };
 
+    int notificationId;
     if (widget.reminder != null && widget.reminder!['id'] != null) {
+      notificationId = int.parse(widget.reminder!['id'].toString());
+      // Cancel the old notification before updating
+      await NotificationService.cancelNotification(notificationId);
       await Supabase.instance.client
           .from('remindersbadge')
           .update(reminderData)
@@ -188,9 +154,12 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
         );
       }
     } else {
-      await Supabase.instance.client
+      final response = await Supabase.instance.client
           .from('remindersbadge')
-          .insert(reminderData);
+          .insert(reminderData)
+          .select('id')
+          .single();
+      notificationId = response['id'] as int;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -201,11 +170,19 @@ class _AddReminderDialogState extends State<AddReminderDialog> {
       }
     }
 
-    await _scheduleNotification(
-      dateTime,
-      _titleController.text,
-      _descriptionController.text,
+    await NotificationService.scheduleNotification(
+      id: notificationId,
+      title: _titleController.text,
+      body: _descriptionController.text,
+      scheduledDate: dateTime,
     );
+
+    // Show a test notification immediately to verify notifications are working
+    await NotificationService.showTestNotification(
+      title: 'Test Notification: ${_titleController.text}',
+      body: 'This is a test notification for your reminder.',
+    );
+
     setState(() => _isLoading = false);
     if (mounted) Navigator.of(context).pop(reminderData);
   }

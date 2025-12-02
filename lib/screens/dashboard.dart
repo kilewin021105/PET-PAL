@@ -2,17 +2,17 @@ import 'package:flutter_application_1/InsideAcc/HelpPage.dart';
 
 import '../InsideAcc/EditProfileTile.dart';
 import 'add_pet_dialog.dart';
-import '../services/reminder_count_service.dart' as count_service;
 import 'package:flutter/material.dart';
 import '../services/SessionManager.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../main.dart' show MainScreen;
 import '../LoginForms/login.dart';
-import 'add_reminder_dialog.dart';
+import '../InsideAcc/pet_profile_page.dart';
 import '../models/reminder.dart';
 import '../services/reminder_fetch_service.dart';
-import '../InsideAcc/pet_profile_page.dart';
+import '../services/reminder_count_service.dart';
+import 'add_reminder_dialog.dart';
 
 // PetProfilePage class removed from this file.
 // Use PetProfileScreen in lib/InsideAcc/pet_profile_page.dart:
@@ -39,16 +39,10 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
-  int _reminderCount = 0;
-
-  Future<void> _fetchReminderCount() async {
-    final count = await count_service.getRemindersCount();
-    if (mounted) setState(() => _reminderCount = count);
-  }
-
-  late Future<List<Reminder>> _remindersFuture;
   final SupabaseClient supabase = Supabase.instance.client;
   List<Map<String, dynamic>> pets = [];
+  int _reminderCount = 0;
+  late Future<List<Reminder>> _remindersFuture;
 
   @override
   void initState() {
@@ -78,6 +72,246 @@ class _DashboardPageState extends State<DashboardPage> {
     }
   }
 
+  Future<void> _fetchReminderCount() async {
+    try {
+      final count = await getRemindersCount();
+      setState(() {
+        _reminderCount = count;
+      });
+    } catch (e) {
+      // Handle error silently or log it
+    }
+  }
+
+  void _refreshReminders() {
+    setState(() {
+      _remindersFuture = fetchReminders();
+      _fetchReminderCount();
+    });
+  }
+
+  String _getDueDateText(DateTime dateTime) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final reminderDate = DateTime(dateTime.year, dateTime.month, dateTime.day);
+
+    if (reminderDate == today) {
+      return 'Today';
+    } else if (reminderDate == today.add(const Duration(days: 1))) {
+      return 'Tomorrow';
+    } else {
+      final daysDifference = reminderDate.difference(today).inDays;
+      if (daysDifference > 0 && daysDifference <= 7) {
+        final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        return weekdays[reminderDate.weekday - 1];
+      } else {
+        return '${reminderDate.month}/${reminderDate.day}/${reminderDate.year}';
+      }
+    }
+  }
+
+  Widget _buildReminderCard(Reminder reminder, BuildContext context) {
+    Color statusColor;
+    String statusText;
+    switch (reminder.status) {
+      case 'pending':
+        statusColor = Colors.orange;
+        statusText = 'Pending';
+        break;
+      case 'completed':
+        statusColor = Colors.green;
+        statusText = 'Completed';
+        break;
+      case 'missed':
+        statusColor = Colors.red;
+        statusText = 'Missed';
+        break;
+      case 'past':
+        statusColor = Colors.purple;
+        statusText = 'Past';
+        break;
+      default:
+        statusColor = Colors.grey;
+        statusText = 'Unknown';
+    }
+
+    final now = DateTime.now();
+    final isToday = reminder.dateTime.toLocal().year == now.year &&
+                    reminder.dateTime.toLocal().month == now.month &&
+                    reminder.dateTime.toLocal().day == now.day;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black12,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  reminder.title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            reminder.description,
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.grey[700],
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Due: ${_getDueDateText(reminder.dateTime)}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          ),
+          if (reminder.status == 'pending') ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      final userId = Supabase.instance.client.auth.currentUser?.id;
+                      if (userId == null) return;
+                      await Supabase.instance.client
+                          .from('remindersbadge')
+                          .update({'status': 'completed'})
+                          .eq('id', reminder.id)
+                          .eq('user_id', userId);
+                      _refreshReminders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Reminder marked as completed')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error updating reminder: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Mark Completed', style: TextStyle(color: Colors.green)),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      final userId = Supabase.instance.client.auth.currentUser?.id;
+                      if (userId == null) return;
+                      await Supabase.instance.client
+                          .from('remindersbadge')
+                          .update({'status': 'missed'})
+                          .eq('id', reminder.id)
+                          .eq('user_id', userId);
+                      _refreshReminders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Reminder marked as missed')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error updating reminder: $e')),
+                      );
+                    }
+                  },
+                  child: const Text('Mark Missed', style: TextStyle(color: Colors.red)),
+                ),
+              ],
+            ),
+          ],
+          if (reminder.status == 'missed' || reminder.status == 'past') ...[
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () async {
+                final DateTime now = DateTime.now();
+                final DateTime initialDate = reminder.dateTime.isBefore(now) ? now : reminder.dateTime;
+                final DateTime? pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: initialDate,
+                  firstDate: now,
+                  lastDate: now.add(const Duration(days: 365)),
+                );
+                if (pickedDate != null) {
+                  final TimeOfDay? pickedTime = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.fromDateTime(reminder.dateTime),
+                  );
+                  if (pickedTime != null) {
+                    final DateTime newDateTime = DateTime(
+                      pickedDate.year,
+                      pickedDate.month,
+                      pickedDate.day,
+                      pickedTime.hour,
+                      pickedTime.minute,
+                    );
+                    try {
+                      final userId = Supabase.instance.client.auth.currentUser?.id;
+                      if (userId == null) return;
+                      await Supabase.instance.client
+                          .from('remindersbadge')
+                          .update({
+                            'status': 'pending',
+                            'date_time': newDateTime.toIso8601String()
+                          })
+                          .eq('id', reminder.id)
+                          .eq('user_id', userId);
+                      _refreshReminders();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Reminder rescheduled successfully')),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error rescheduling reminder: $e')),
+                      );
+                    }
+                  }
+                }
+              },
+              child: const Text('Reschedule', style: TextStyle(color: Colors.blue)),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final session = Provider.of<SessionManager>(context);
@@ -92,144 +326,168 @@ class _DashboardPageState extends State<DashboardPage> {
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         actions: [
           Stack(
-            alignment: Alignment.center,
             children: [
               IconButton(
-                icon: const Icon(
-                  Icons.notifications_none,
-                  color: Color.fromARGB(255, 218, 226, 226),
-                ),
-                tooltip: "Reminders",
+                icon: const Icon(Icons.notifications),
+                tooltip: 'Reminders',
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(18),
-                      ),
-                    ),
-                    builder: (context) => Padding(
-                      padding: MediaQuery.of(context).viewInsets,
-                      child: DraggableScrollableSheet(
-                        expand: false,
-                        initialChildSize: 0.7,
-                        minChildSize: 0.4,
-                        maxChildSize: 0.95,
-                        builder: (context, scrollController) {
-                          return Column(
+                    builder: (context) => FutureBuilder<List<Reminder>>(
+                      future: _remindersFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const SizedBox(
+                            height: 200,
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        } else if (snapshot.hasError) {
+                          return SizedBox(
+                            height: 200,
+                            child: Center(child: Text('Error: ${snapshot.error}')),
+                          );
+                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const SizedBox(
+                            height: 200,
+                            child: Center(child: Text('No reminders found.')),
+                          );
+                        }
+
+                        final reminders = snapshot.data!;
+                        final pending = reminders.where((r) => r.status == 'pending').toList();
+                        final completed = reminders.where((r) => r.status == 'completed').toList();
+                        final missed = reminders.where((r) => r.status == 'missed').toList();
+                        final past = reminders.where((r) => r.status == 'past').toList();
+
+                        return Container(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12.0,
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Reminders',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  TextButton.icon(
+                                    onPressed: () async {
+                                      final added = await showDialog(
+                                        context: context,
+                                        builder: (context) => const AddReminderDialog(),
+                                      );
+                                      if (added != null) {
+                                        _refreshReminders();
+                                      }
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Add Reminder'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Overall Record Card
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).cardColor,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black12,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Padding(
-                                      padding: EdgeInsets.only(left: 16.0),
-                                      child: Text(
-                                        'PetPal Reminders',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
+                                    const Text(
+                                      'Reminder Record',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
                                       ),
                                     ),
-                                    TextButton.icon(
-                                      onPressed: () async {
-                                        final added = await showDialog(
-                                          context: context,
-                                          builder: (context) =>
-                                              const AddReminderDialog(),
-                                        );
-                                        if (added == true) {
-                                          setState(() {
-                                            _remindersFuture = fetchReminders();
-                                          });
-                                          _fetchReminderCount();
-                                        }
-                                      },
-                                      icon: const Icon(Icons.add, size: 18),
-                                      label: const Text('Add Reminder'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.teal,
-                                      ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      children: [
+                                        Column(
+                                          children: [
+                                            Text('${pending.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.orange)),
+                                            const Text('Pending'),
+                                          ],
+                                        ),
+                                        Column(
+                                          children: [
+                                            Text('${completed.length + missed.length + past.length}', style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue)),
+                                            const Text('Past'),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                               ),
+                              const SizedBox(height: 24),
                               Expanded(
-                                child: FutureBuilder<List<Reminder>>(
-                                  future: _remindersFuture,
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    } else if (snapshot.hasError) {
-                                      return Center(
-                                        child: Text('Error: ${snapshot.error}'),
-                                      );
-                                    } else if (!snapshot.hasData ||
-                                        snapshot.data!.isEmpty) {
-                                      return const Center(
-                                        child: Text('No reminders found.'),
-                                      );
-                                    }
-                                    final reminders = snapshot.data!;
-                                    return ListView.separated(
-                                      controller: scrollController,
-                                      itemCount: reminders.length,
-                                      separatorBuilder: (context, i) =>
-                                          const Divider(height: 1),
-                                      itemBuilder: (context, i) {
-                                        final r = reminders[i];
-                                        return ListTile(
-                                          title: Text(r.title),
-                                          subtitle: Text(r.description),
-                                          trailing: Text(
-                                            '${r.dateTime.month}/${r.dateTime.day}/${r.dateTime.year} ${r.dateTime.hour.toString().padLeft(2, '0')}:${r.dateTime.minute.toString().padLeft(2, '0')}',
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                    }
-                  ),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Ongoing Reminders
+                                      if (pending.isNotEmpty) ...[
+                                        const Text('Ongoing Reminders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 12),
+                                        ...pending.map((reminder) => _buildReminderCard(reminder, context)),
+                                        const SizedBox(height: 24),
+                                      ],
+                                      // Past Reminders
+                                      if ((completed + missed + past).isNotEmpty) ...[
+                                        const Text('Past Reminders', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 12),
+                                        ...(completed + missed + past).map((reminder) => _buildReminderCard(reminder, context)),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ),
                             ],
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
                     ),
                   );
                 },
               ),
               if (_reminderCount > 0)
                 Positioned(
-                  right: 10,
-                  top: 14,
+                  right: 8,
+                  top: 8,
                   child: Container(
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       color: Colors.red,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(10),
                     ),
                     constraints: const BoxConstraints(
-                      minWidth: 14,
-                      minHeight: 14,
+                      minWidth: 16,
+                      minHeight: 16,
                     ),
                     child: Text(
                       '$_reminderCount',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 9,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
                       textAlign: TextAlign.center,
@@ -238,7 +496,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
             ],
           ),
-                  ],
+        ],
       ),
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SingleChildScrollView(
@@ -299,7 +557,7 @@ class _DashboardPageState extends State<DashboardPage> {
               ],
             ),
 
-            const SizedBox(height: 24),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -544,118 +802,4 @@ class AccountPage extends StatelessWidget {
   }
 }
 
-//Mao ni ang Reminders Page
-class RemindersPage extends StatelessWidget {
-  const RemindersPage({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("PetPal Reminders"),
-        backgroundColor: Colors.teal,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
-          ReminderCard(
-            icon: Icons.favorite_border,
-            title: 'Vet Check-up',
-            subtitle: 'Tomorrow, 2:00 PM',
-            badgeText: 'Due Soon',
-            badgeColor: Colors.teal,
-          ),
-          SizedBox(height: 12),
-          ReminderCard(
-            icon: Icons.science_outlined,
-            title: 'Medication',
-            subtitle: 'Daily at 8:00 AM',
-            badgeText: 'Daily',
-            badgeColor: Colors.green,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class ReminderCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String badgeText;
-  final Color badgeColor;
-
-  const ReminderCard({
-    super.key,
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.badgeText,
-    required this.badgeColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [
-          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.teal,
-            child: Icon(icon, color: Colors.white),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: isDark ? Colors.white70 : Colors.grey,
-                    fontWeight: isDark ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 13,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: badgeColor.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              badgeText,
-              style: TextStyle(
-                color: badgeColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
